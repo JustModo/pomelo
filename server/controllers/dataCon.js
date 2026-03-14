@@ -10,7 +10,7 @@ const COLLECTIONS = {
     'submissions': Submission
 };
 
-exports.getData = async (req, res) => {
+exports.getData = async (req, res, next) => {
     try {
         await connectDB();
 
@@ -35,11 +35,11 @@ exports.getData = async (req, res) => {
 
     } catch (error) {
         console.error("Generic API Error:", error);
-        return res.status(500).json({ success: false, error: error.message });
+        return next(error);
     }
 };
 
-exports.getOne = async (req, res) => {
+exports.getOne = async (req, res, next) => {
     try {
         await connectDB();
 
@@ -60,6 +60,6 @@ exports.getOne = async (req, res) => {
 
     } catch (error) {
         console.error("Generic API Error:", error);
-        return res.status(500).json({ success: false, error: error.message });
+        return next(error);
     }
 }
