@@ -47,3 +47,12 @@ app.use("/api/submit", submitRoutes);
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
+
+// Global error handler — must be last
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(err.statusCode || 500).json({
+    success: false,
+    error: process.env.NODE_ENV === 'production' ? 'Server Error' : err.message,
+  });
+});
