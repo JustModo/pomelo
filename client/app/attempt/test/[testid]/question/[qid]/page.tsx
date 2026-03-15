@@ -20,7 +20,7 @@ export default async function TestContentPage(props: Props) {
   const session = await auth();
 
   // Fetch contest data via student API
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/contest/${testid}/data`, {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/test/${testid}/data`, {
     headers: {
       "Authorization": `Bearer ${session?.backendToken}`,
       "Content-Type": "application/json"

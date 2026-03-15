@@ -53,7 +53,7 @@ export default function ContestLanding() {
     if (status !== "authenticated" || !session?.backendToken || !testid) return;
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/contest/${testid}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/test/${testid}`, {
         headers: {
           "Authorization": `Bearer ${session.backendToken}`,
           "Content-Type": "application/json"
@@ -97,7 +97,7 @@ export default function ContestLanding() {
 
   const handleStart = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/contest/start`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/test/start`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${session?.backendToken}`,
@@ -111,7 +111,7 @@ export default function ContestLanding() {
         toast.success("Good luck!");
 
         // Fetch problems to redirect to the first one
-        const questionsRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/contest/${testid}/data`, {
+        const questionsRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/test/${testid}/data`, {
           headers: { "Authorization": `Bearer ${session?.backendToken}` }
         });
         const questionsData = await questionsRes.json();

@@ -35,7 +35,7 @@ export default function JoinContestPage() {
     setIsLoading(true);
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/contest/join`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/test/join`,
         {
           method: "POST",
           credentials: "include",

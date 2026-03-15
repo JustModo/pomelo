@@ -37,7 +37,7 @@ export default function MCQScreen({ problem, problems }: MCQScreenProps) {
     if (!session?.backendToken || !params.testid) return;
     setIsSaving(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/contest/${params.testid}/mcq`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/test/${params.testid}/mcq`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

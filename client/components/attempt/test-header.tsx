@@ -41,7 +41,7 @@ export default function TestHeader({ problems }: TestHeaderProps) {
     const verifyStatus = async () => {
       if (!session?.backendToken || !params.testid) return;
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/contest/${params.testid}/data`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/test/${params.testid}/data`, {
           headers: {
             "Authorization": `Bearer ${session.backendToken}`,
             "Content-Type": "application/json"
@@ -66,7 +66,7 @@ export default function TestHeader({ problems }: TestHeaderProps) {
 
     setIsFinishing(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/contest/${params.testid}/end`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/test/${params.testid}/end`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${session.backendToken}`,

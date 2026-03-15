@@ -43,7 +43,7 @@ export default function TestCasePanel({
     setIsRunning(true);
     setView("sample");
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/contest/${testid}/run`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/test/${testid}/run`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -71,7 +71,7 @@ export default function TestCasePanel({
     setIsRunning(true);
     setView("hidden");
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/contest/${testid}/submit`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/test/${testid}/submit`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
