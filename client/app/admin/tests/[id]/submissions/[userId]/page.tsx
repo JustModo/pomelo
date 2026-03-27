@@ -8,7 +8,6 @@ import {
     Code2,
     HelpCircle,
     Trophy,
-    User,
     Clock,
 } from "lucide-react";
 
@@ -249,23 +248,15 @@ export default async function SubmissionDetailPage({
                             </p>
                         </div>
                     </div>
-                    <div className="flex flex-wrap items-center gap-3">
-                        <Badge variant="outline" className="px-4 py-1 font-mono text-sm sm:text-base">
-                            Score: {data.totalScore} / {data.maxScore}
-                        </Badge>
-                        <Button variant="outline" size="sm" asChild>
-                            <Link href={`/admin/users/${data.userId}`}>
-                                <User className="mr-2 h-4 w-4" />
-                                Profile
-                            </Link>
-                        </Button>
-                    </div>
+                    <Badge variant="outline" className="w-fit px-4 py-1 font-mono text-sm sm:text-base">
+                        Score: {data.totalScore} / {data.maxScore}
+                    </Badge>
                 </div>
 
                 <Separator className="bg-border/50" />
 
                 <div className="grid gap-6 md:grid-cols-3">
-                    <StatItem icon={<User className="h-4 w-4" />} label="Candidate" value={data.userName} mono={false} />
+                    <StatItem icon={<Trophy className="h-4 w-4" />} label="Candidate" value={data.userName} mono={false} />
                     <StatItem icon={<Trophy className="h-4 w-4" />} label="Total Score" value={`${data.totalScore} / ${data.maxScore}`} />
                     <StatItem icon={<Clock className="h-4 w-4" />} label="Submitted On" value={formatSubmittedAt(data.submittedAt)} mono={false} />
                 </div>

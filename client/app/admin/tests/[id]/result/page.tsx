@@ -3,7 +3,6 @@ import {
     ArrowLeft,
     Users,
     Award,
-    User,
     ExternalLink,
 } from "lucide-react";
 
@@ -209,16 +208,6 @@ export default async function AdminTestResultPage({ params }: { params: Promise<
                                                 </TableCell>
                                                 <TableCell className="px-6">
                                                     <div className="flex items-center justify-end gap-2">
-                                                        <Button
-                                                            variant="outline"
-                                                            size="icon"
-                                                            className="h-9 w-9"
-                                                            asChild
-                                                        >
-                                                            <Link href={`/admin/users/${p.userId}`}>
-                                                                <User className="h-4 w-4" />
-                                                            </Link>
-                                                        </Button>
                                                         <Button
                                                             size="sm"
                                                             asChild
