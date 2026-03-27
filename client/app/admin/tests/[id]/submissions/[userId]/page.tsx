@@ -143,6 +143,8 @@ function mapSubmissionDetail(submissionItem: RawSubmissionItem): SubmissionDetai
         };
     }
 
+    const submittedCode = submissionItem.code || submissionItem.answer?.[0];
+
     return {
         questionId: question._id,
         type: "coding",
@@ -150,7 +152,7 @@ function mapSubmissionDetail(submissionItem: RawSubmissionItem): SubmissionDetai
         points: question.marks,
         earnedPoints: submissionItem.score || 0,
         status: submissionItem.status || "Pending",
-        submittedCode: submissionItem.code,
+        submittedCode,
         language: submissionItem.language,
         testCases: (submissionItem.testCaseResults || []).map((testCase) => ({
             id: testCase.testCase,

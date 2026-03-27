@@ -12,7 +12,9 @@ import { CodingProblem } from "@/types/problem";
 
 export function CodeScreen({ problem }: { problem: CodingProblem }) {
   const availableLanguages = Object.keys(problem.boilerplateCode || {}) as Array<keyof typeof problem.boilerplateCode>;
-  const [code, setCode] = useState(problem.boilerplateCode && availableLanguages.length > 0 ? (problem.boilerplateCode[availableLanguages[0]] || "") : "// Start coding here");
+  const initialCode = problem.savedCode
+    || (problem.boilerplateCode && availableLanguages.length > 0 ? (problem.boilerplateCode[availableLanguages[0]] || "") : "// Start coding here");
+  const [code, setCode] = useState(initialCode);
   const [language, setLanguage] = useState(availableLanguages.length > 0 ? String(availableLanguages[0]) : "javascript");
   const [isMounted, setIsMounted] = useState(false);
 
