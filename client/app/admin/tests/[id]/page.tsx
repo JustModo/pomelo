@@ -39,13 +39,12 @@ export default async function AdminTestDetailPage({
       const totalSeconds = Math.floor(diffMs / 1000);
       const h = Math.floor(totalSeconds / 3600);
       const m = Math.floor((totalSeconds % 3600) / 60);
-      const s = totalSeconds % 60;
 
       test = {
         id: data._id as string,
         title: data.title as string,
         description: data.description as string,
-        duration: `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`,
+        duration: `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`,
         startsAt: startTime,
         problems: ((data.questions as Record<string, unknown>[]) || []).map((q) => ({
           ...q,

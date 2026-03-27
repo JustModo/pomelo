@@ -29,31 +29,66 @@ import {
 } from "@/components/ui/form";
 import { useEffect, useState } from "react";
 
+function formatTimeForInput(date: Date) {
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  const period = hours >= 12 ? "PM" : "AM";
+  const normalizedHours = hours % 12 || 12;
+
+  return `${String(normalizedHours).padStart(2, "0")}:${String(minutes).padStart(2, "0")} ${period}`;
+}
+
+function parseTimeInput(value: string) {
+  const match = value.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!match) {
+    return null;
+  }
+
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  const period = match[3].toUpperCase();
+
+  if (hours < 1 || hours > 12 || minutes < 0 || minutes > 59) {
+    return null;
+  }
+
+  let normalizedHours = hours % 12;
+  if (period === "PM") {
+    normalizedHours += 12;
+  }
+
+  return { hours: normalizedHours, minutes };
+}
+
 export default function TestBasicCard() {
   const { control, setValue, watch } = useFormContext();
 
   const startsAt = watch("startsAt");
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState<Date | undefined>(undefined);
-  const [time, setTime] = useState("00:00:00");
+  const [time, setTime] = useState("12:00 AM");
 
   useEffect(() => {
     if (startsAt) {
       const parsed = new Date(startsAt);
       if (!isNaN(parsed.getTime())) {
         setDate(parsed);
-        setTime(parsed.toTimeString().slice(0, 8));
+        setTime(formatTimeForInput(parsed));
       }
     }
   }, [startsAt]);
 
   useEffect(() => {
     if (date && time) {
-      const [h, m, s] = time.split(":").map(Number);
+      const parsedTime = parseTimeInput(time);
+      if (!parsedTime) {
+        return;
+      }
+
       const updated = new Date(date);
-      updated.setHours(h);
-      updated.setMinutes(m);
-      updated.setSeconds(s);
+      updated.setHours(parsedTime.hours);
+      updated.setMinutes(parsedTime.minutes);
+      updated.setSeconds(0);
       setValue("startsAt", updated.toISOString());
     }
   }, [date, time, setValue]);
@@ -104,11 +139,11 @@ export default function TestBasicCard() {
             name="duration"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Duration (HH:MM:SS)</FormLabel>
+                <FormLabel>Duration (HH:MM)</FormLabel>
                 <FormControl>
                   <Input
                     type="time"
-                    step="1"
+                    step="60"
                     className="w-fit bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden"
                     {...field}
                   />
@@ -144,10 +179,10 @@ export default function TestBasicCard() {
                 </PopoverContent>
               </Popover>
               <Input
-                type="time"
-                step="1"
+                type="text"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
+                placeholder="hh:mm AM"
                 className="w-fit bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden"
               />
             </div>

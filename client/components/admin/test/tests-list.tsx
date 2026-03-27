@@ -41,15 +41,13 @@ export function TestsList({ initialTests }: Props) {
     const end = t.endTime ? new Date(t.endTime).getTime() : 0;
     const durationMs = end - start;
 
-    const seconds = Math.floor((durationMs / 1000) % 60);
     const minutes = Math.floor((durationMs / (1000 * 60)) % 60);
     const hours = Math.floor((durationMs / (1000 * 60 * 60)));
 
     let durationStr = "";
     if (hours > 0) durationStr += `${hours}h `;
     if (minutes > 0) durationStr += `${minutes}m `;
-    if (seconds > 0) durationStr += `${seconds}s`;
-    if (!durationStr) durationStr = "0s";
+    if (!durationStr) durationStr = "0m";
 
     return {
       id: (t.id || t._id || '') as string,

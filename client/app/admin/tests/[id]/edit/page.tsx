@@ -61,8 +61,7 @@ export default async function AdminTestEditPage({
     const diffMs = end - start;
     const hours = Math.floor(diffMs / 3600000);
     const minutes = Math.floor((diffMs % 3600000) / 60000);
-    const seconds = Math.floor(((diffMs % 3600000) % 60000) / 1000);
-    const durationStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    const durationStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 
     testData = {
       ...testDataRaw,
