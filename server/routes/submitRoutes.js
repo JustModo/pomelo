@@ -3,10 +3,11 @@ const router = express.Router();
 const { requireAuth } = require("../middlewares/checkAuth");
 const { isContestActive } = require("../middlewares/contestAuth");
 const { saveMCQ, submitCode } = require("../controllers/submitCon");
+const { submissionLimiter } = require("../middlewares/rateLimiter");
 const Question = require("../models/Question");
 
 // POST /api/submit - Auto-detect type and route accordingly
-router.post("/", requireAuth(), isContestActive, async (req, res) => {
+router.post("/", requireAuth(), submissionLimiter, isContestActive, async (req, res) => {
     try {
         const { questionId } = req.body;
 
