@@ -19,13 +19,14 @@ const {
 } = require("../controllers/submitCon");
 
 const { validateContest } = require("../middlewares/contestMiddleware");
+const { submissionLimiter, joinLimiter } = require("../middlewares/rateLimiter");
 
 const router = express.Router();
 
 // --- PUBLIC ACCESS ---
 
 // Join via ID (returns contestId)
-router.post('/join', validateJoinId);
+router.post('/join', joinLimiter, validateJoinId);
 
 // List all (dev/debug)
 router.get('/list', listAllContests);
@@ -42,21 +43,21 @@ router.get('/:id', validateContest(), getContestLanding);
 // --- AUTHENTICATED ACTIONS ---
 
 // Start Attempt (Create session) - Must be started, not ended
-router.post('/start', requireAuth(), validateContest({ checkStarted: true, checkEnded: true, checkAttemptStatus: 'NotCompleted' }), startTest);
+router.post('/start', requireAuth(), submissionLimiter, validateContest({ checkStarted: true, checkEnded: true, checkAttemptStatus: 'NotCompleted' }), startTest);
 
 // Get Test Data - Must be started and not completed
 router.get('/:id/data', requireAuth(), validateContest({ checkStarted: true, checkEnded: true, checkAttemptStatus: 'NotCompleted' }), getContestData);
 
 // Run Code - Must be active and not completed
-router.post('/:id/run', requireAuth(), validateContest({ checkStarted: true, checkEnded: true, checkAttemptStatus: 'NotCompleted' }), runCode);
+router.post('/:id/run', requireAuth(), submissionLimiter, validateContest({ checkStarted: true, checkEnded: true, checkAttemptStatus: 'NotCompleted' }), runCode);
 
 // Submit Code Solution - Must be active and not completed
-router.post('/:id/submit', requireAuth(), validateContest({ checkStarted: true, checkEnded: true, checkAttemptStatus: 'NotCompleted' }), submitCode);
+router.post('/:id/submit', requireAuth(), submissionLimiter, validateContest({ checkStarted: true, checkEnded: true, checkAttemptStatus: 'NotCompleted' }), submitCode);
 
 // End Test
-router.post('/:id/end', requireAuth(), validateContest({ checkStarted: true }), endTest);
+router.post('/:id/end', requireAuth(), submissionLimiter, validateContest({ checkStarted: true }), endTest);
 
 // Save MCQ Answer - Must be not completed
-router.post('/:id/mcq', requireAuth(), validateContest({ checkStarted: true, checkEnded: true, checkAttemptStatus: 'NotCompleted' }), saveMCQ);
+router.post('/:id/mcq', requireAuth(), submissionLimiter, validateContest({ checkStarted: true, checkEnded: true, checkAttemptStatus: 'NotCompleted' }), saveMCQ);
 
 module.exports = router;

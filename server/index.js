@@ -4,6 +4,9 @@ const cors = require("cors");
 
 const app = express();
 
+// Trust proxy for express-rate-limit (essential in production behind LB/proxy)
+app.set("trust proxy", 1);
+
 const { connectDB } = require("./helpers/dbCon");
 
 // const compRoutes = require("./routes/compilerRoutes");
