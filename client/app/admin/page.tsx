@@ -1,6 +1,7 @@
 import React from "react";
 import HeroSection, { DashboardStats } from "@/components/admin/hero-section";
 import { auth } from "@/auth";
+import { Test } from "@/types/test";
 
 export const dynamic = "force-dynamic";
 
@@ -43,7 +44,46 @@ export default async function AdminAnalyticsPage() {
   };
 
   let stats = defaultStats;
-  let recentTests = [];
+  let recentTests: Test[] = [];
+
+  const normalizeStatus = (
+    status: unknown,
+    startTime?: string,
+    endTime?: string
+  ): Test["status"] => {
+    const manualStatus = typeof status === "string" ? status.toLowerCase() : "";
+    const start = startTime ? new Date(startTime) : null;
+    const end = endTime ? new Date(endTime) : null;
+    const now = new Date();
+
+    if (manualStatus === "completed" || manualStatus === "ended") return "completed";
+    if (manualStatus === "ongoing" || manualStatus === "running") return "ongoing";
+    if (manualStatus === "waiting" || manualStatus === "draft") return "waiting";
+
+    if (start && end) {
+      if (now > end) return "completed";
+      if (now >= start && now <= end) return "ongoing";
+      if (now < start) return "waiting";
+    }
+
+    return "waiting";
+  };
+
+  const formatDuration = (startTime?: string, endTime?: string, fallback?: unknown) => {
+    if (typeof fallback === "string" && fallback.trim().length > 0) return fallback;
+    if (!startTime || !endTime) return "00:00";
+
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+    const diffMs = end.getTime() - start.getTime();
+    if (!Number.isFinite(diffMs) || diffMs <= 0) return "00:00";
+
+    const totalSeconds = Math.floor(diffMs / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+  };
 
   if (apiData && apiData.success) {
     stats = {
@@ -56,7 +96,35 @@ export default async function AdminAnalyticsPage() {
       mediumQuestions: apiData.questionBank?.medium || 0,
       hardQuestions: apiData.questionBank?.hard || 0,
     };
-    recentTests = apiData.recentTests || [];
+    recentTests = (apiData.recentTests || []).map((test: Record<string, unknown>) => {
+      const startTime = (test.startTime as string) || (test.startsAt as string);
+      const endTime = test.endTime as string | undefined;
+      const totalQuestions =
+        (test.totalQuestions as number | undefined) ||
+        (test.problemCount as number | undefined) ||
+        ((test.questions as unknown[]) || []).length ||
+        0;
+      const participantsCompleted = (test.participantsCompleted as number | undefined) ?? 0;
+      const participantsInProgress =
+        (test.participantsInProgress as number | undefined) ??
+        Math.max(((test.participants as number | undefined) ?? 0) - participantsCompleted, 0);
+
+      return {
+        id: (test.id as string) || (test._id as string) || "",
+        _id: test._id as string | undefined,
+        title: (test.title as string) || "Untitled",
+        description: (test.description as string) || "",
+        duration: formatDuration(startTime, endTime, test.duration),
+        totalQuestions,
+        startsAt: startTime || "",
+        status: normalizeStatus(test.status, startTime, endTime),
+        participantsInProgress,
+        participantsCompleted,
+        problems: (test.problems as string[]) || [],
+        joinId: (test.joinId as string) || "",
+        createdAt: (test.createdAt as string) || "",
+      } as Test;
+    });
   }
 
   return (

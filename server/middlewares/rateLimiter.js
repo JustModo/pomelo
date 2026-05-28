@@ -20,8 +20,8 @@ const submissionLimiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
   max: 10,
   keyGenerator: (req) => {
-    // Strictly use user ID as this is applied after requireAuth
-    return req.user.id;
+    // Use user id when available; fall back to IP to avoid runtime errors
+    return req.user?.id || req.user?._id || req.user?.sub || req.ip;
   },
   message: 'Too many submissions, please try again after a minute',
   standardHeaders: true,

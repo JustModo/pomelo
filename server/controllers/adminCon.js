@@ -4,6 +4,13 @@ const Submission = require('../models/Submissions');
 const { connectDB } = require('../helpers/dbCon');
 const { getJudge } = require("@pomelo/code-gen");
 
+const isNonEmptyString = (value) => typeof value === 'string' && value.trim().length > 0;
+const toNumber = (value) => {
+    const num = Number(value);
+    return Number.isFinite(num) ? num : null;
+};
+const asArray = (value) => Array.isArray(value) ? value : [];
+
 // --- Questions ---
 
 // @desc Create a new problem
@@ -19,13 +26,51 @@ const createProblem = async (req, res, next) => {
             boilerplate // Frontend sends 'boilerplate'
         } = req.body;
 
+        const isCoding = questionType === 'Coding' || type === 'coding';
+        const isMcq = questionType === 'Single Correct' || questionType === 'Multiple Correct' || type === 'mcq';
+        const marksNumber = toNumber(marks);
+
+        if (!isNonEmptyString(title) || !isNonEmptyString(description) || !isNonEmptyString(difficulty)) {
+            return res.status(400).json({ success: false, error: 'Missing required fields' });
+        }
+
+        if (marksNumber === null) {
+            return res.status(400).json({ success: false, error: 'Invalid marks value' });
+        }
+
+        if (!isCoding && !isMcq) {
+            return res.status(400).json({ success: false, error: 'Invalid question type' });
+        }
+
+        const safeOptions = asArray(options);
+        const safeInputVariables = asArray(inputVariables);
+        const safeTestcases = asArray(testcases);
+
+        if (isCoding) {
+            if (!isNonEmptyString(functionName)) {
+                return res.status(400).json({ success: false, error: 'Function name is required for coding questions' });
+            }
+            if (!Array.isArray(inputVariables)) {
+                return res.status(400).json({ success: false, error: 'Input variables must be an array' });
+            }
+        }
+
+        if (isMcq) {
+            if (!Array.isArray(options) || safeOptions.length < 2) {
+                return res.status(400).json({ success: false, error: 'Options must be an array with at least two values' });
+            }
+            if (!(typeof correctAnswer === 'string' || Array.isArray(correctAnswer))) {
+                return res.status(400).json({ success: false, error: 'Correct answer is required for MCQ' });
+            }
+        }
+
         // Map frontend 'boilerplate' to model 'boilerplateCode'
         let boilerplateCode = req.body.boilerplateCode || boilerplate;
 
         // Generate Boilerplate if Coding type
         if ((questionType === 'Coding' || type === 'coding') && boilerplateCode) {
             const method = functionName;
-            const inputs = inputVariables.map(v => ({
+            const inputs = safeInputVariables.map(v => ({
                 variable: v.variable,
                 type: v.type // Correct access: flat structure
             }));
@@ -63,13 +108,13 @@ const createProblem = async (req, res, next) => {
         }
 
         const newQuestion = new Question({
-            title, description, difficulty, marks,
-            questionType, options, correctAnswer,
+            title, description, difficulty, marks: marksNumber,
+            questionType, options: safeOptions, correctAnswer,
             constraints, inputFormat, outputFormat,
             boilerplateCode,
-            testcases,
+            testcases: safeTestcases,
             type, // Save Type
-            functionName, inputVariables
+            functionName, inputVariables: safeInputVariables
         });
 
         await newQuestion.save();
@@ -93,6 +138,30 @@ const updateProblem = async (req, res, next) => {
             boilerplate
         } = req.body;
 
+        const isCoding = questionType === 'Coding' || type === 'coding';
+        const isMcq = questionType === 'Single Correct' || questionType === 'Multiple Correct' || type === 'mcq';
+        const marksNumber = marks !== undefined ? toNumber(marks) : null;
+
+        if (marks !== undefined && marksNumber === null) {
+            return res.status(400).json({ success: false, error: 'Invalid marks value' });
+        }
+
+        if (questionType !== undefined && !isCoding && !isMcq) {
+            return res.status(400).json({ success: false, error: 'Invalid question type' });
+        }
+
+        const safeOptions = asArray(options);
+        const safeInputVariables = asArray(inputVariables);
+        const safeTestcases = asArray(testcases);
+
+        if (isCoding && inputVariables !== undefined && !Array.isArray(inputVariables)) {
+            return res.status(400).json({ success: false, error: 'Input variables must be an array' });
+        }
+
+        if (isMcq && options !== undefined && (!Array.isArray(options) || safeOptions.length < 2)) {
+            return res.status(400).json({ success: false, error: 'Options must be an array with at least two values' });
+        }
+
         let boilerplateCode = undefined;
         if (req.body.boilerplateCode || boilerplate) {
             boilerplateCode = { ...(req.body.boilerplateCode || boilerplate) };
@@ -101,10 +170,10 @@ const updateProblem = async (req, res, next) => {
         // Generate Boilerplate if Coding type
         if ((questionType === 'Coding' || type === 'coding') && boilerplateCode) {
             const method = functionName;
-            const inputs = inputVariables ? inputVariables.map(v => ({
+            const inputs = safeInputVariables.map(v => ({
                 variable: v.variable,
                 type: v.type // Correct access
-            })) : [];
+            }));
 
             const supportedLangs = ['c', 'java', 'python'];
 
@@ -132,15 +201,24 @@ const updateProblem = async (req, res, next) => {
         }
 
         const updates = {
-            title, description, difficulty, marks,
-            questionType, options, correctAnswer,
-            constraints, inputFormat, outputFormat,
+            title,
+            description,
+            difficulty,
+            questionType,
+            correctAnswer,
+            constraints,
+            inputFormat,
+            outputFormat,
             boilerplateCode,
-            testcases,
             type,
             functionName,
-            inputVariables
         };
+
+        if (marks !== undefined) updates.marks = marksNumber;
+
+        if (options !== undefined) updates.options = safeOptions;
+        if (testcases !== undefined) updates.testcases = safeTestcases;
+        if (inputVariables !== undefined) updates.inputVariables = safeInputVariables;
 
         const question = await Question.findByIdAndUpdate(id, updates, { new: true });
 
@@ -272,6 +350,18 @@ const createContest = async (req, res, next) => {
         await connectDB();
         const { title, description, duration, problemIds, rules, author } = req.body;
 
+        if (!isNonEmptyString(title)) {
+            return res.status(400).json({ success: false, error: 'Title is required' });
+        }
+
+        if (!duration || !duration.start || !duration.end) {
+            return res.status(400).json({ success: false, error: 'Duration with start and end is required' });
+        }
+
+        if (problemIds !== undefined && !Array.isArray(problemIds)) {
+            return res.status(400).json({ success: false, error: 'problemIds must be an array' });
+        }
+
         // duration is { start, end }
         const startTime = new Date(duration.start);
         const endTime = new Date(duration.end);
@@ -358,6 +448,18 @@ const updateContest = async (req, res, next) => {
         await connectDB();
         const { id } = req.params;
         const { title, description, duration, problemIds, rules, visibility } = req.body;
+
+        if (title !== undefined && !isNonEmptyString(title)) {
+            return res.status(400).json({ success: false, error: 'Title cannot be empty' });
+        }
+
+        if (duration !== undefined && (!duration.start || !duration.end)) {
+            return res.status(400).json({ success: false, error: 'Duration must include start and end' });
+        }
+
+        if (problemIds !== undefined && !Array.isArray(problemIds)) {
+            return res.status(400).json({ success: false, error: 'problemIds must be an array' });
+        }
 
         const updates = { title, description, rules, visibility };
         if (duration) {

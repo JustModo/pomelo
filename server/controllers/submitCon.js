@@ -1,7 +1,23 @@
 const Submission = require("../models/Submissions");
 const Question = require("../models/Question");
+const Contest = require("../models/Contest");
 const { languageMap } = require("../utils/languageMap");
 const { getJudge } = require("@pomelo/code-gen");
+
+const resolveContestFromRequest = async (req) => {
+    const contestId = req.params.id || req.body.contestId || req.contest?._id;
+    if (!contestId) return { contestId: null, contest: null };
+    if (req.contest) return { contestId, contest: req.contest };
+
+    const contest = await Contest.findById(contestId);
+    return { contestId, contest };
+};
+
+const questionBelongsToContest = (contest, questionId) => {
+    if (!contest || !questionId) return false;
+    const contestQuestionIds = (contest.questions || []).map((id) => id.toString());
+    return contestQuestionIds.includes(questionId.toString());
+};
 
 // Helper function to remove trailing whitespace/newlines from output
 const removeTrailingLineCommands = (output) => {
@@ -47,10 +63,10 @@ const executeTestCases = async ({ question, code, language, testCases, judge0Id 
         } else if (typeof tc.input === 'string') {
             input = tc.input.trim().replace(/,/g, ' ').replace(/\s+/g, ' ');
         } else {
-            input = String(tc.input);
+            input = String(tc.input ?? "");
         }
 
-        const expectedOutput = removeTrailingLineCommands(tc.output.trim());
+        const expectedOutput = removeTrailingLineCommands(String(tc.output ?? "").trim());
         const base64SourceCode = Buffer.from(wrappedCode).toString('base64');
         const base64Input = Buffer.from(input).toString('base64');
 
@@ -104,16 +120,36 @@ const runCode = async (req, res, next) => {
             return res.status(400).json({ success: false, error: "Missing required fields" });
         }
 
+        if (typeof questionId !== "string") {
+            return res.status(400).json({ success: false, error: "Invalid questionId" });
+        }
+
+        const { contestId, contest } = await resolveContestFromRequest(req);
+        if (!contestId) {
+            return res.status(400).json({ success: false, error: "Missing contestId" });
+        }
+        if (!contest) {
+            return res.status(404).json({ success: false, error: "Contest not found" });
+        }
+
         const question = await Question.findById(questionId);
         if (!question) return res.status(404).json({ success: false, error: "Question not found" });
+
+        if (!questionBelongsToContest(contest, questionId)) {
+            return res.status(403).json({ success: false, error: "Question does not belong to contest" });
+        }
 
         const judge0Id = languageMap[language.toLowerCase()];
         if (!judge0Id) return res.status(400).json({ success: false, error: "Unsupported language" });
 
-        const visibleTestCases = (question.testcases || []).filter(tc => tc.isVisible);
+        const visibleTestCases = (Array.isArray(question.testcases) ? question.testcases : []).filter(tc => tc.isVisible);
 
         // If no testcases are marked visible, take the first one as a fallback for user feedback
         const testToRun = visibleTestCases.length > 0 ? visibleTestCases : (question.testcases?.[0] ? [question.testcases[0]] : []);
+
+        if (testToRun.length === 0) {
+            return res.status(400).json({ success: false, error: "No test cases configured" });
+        }
 
         const results = await executeTestCases({
             question,
@@ -137,24 +173,37 @@ const runCode = async (req, res, next) => {
 // @desc    Submit code and save results
 const submitCode = async (req, res, next) => {
     try {
-        const { contestId, questionId, code, language } = req.body;
+        const { questionId, code, language } = req.body;
         const userId = req.user.id || req.user._id || req.user.sub;
+        const { contestId, contest } = await resolveContestFromRequest(req);
         // contestId is validated by middleware if part of URL or body, but here middleware is usually mounted on /:id
         // However, middleware checks req.params.id || req.body.contestId.
         // So we can assume req.contest exists if the route uses the middleware.
 
-        if (!questionId || !code || !language) {
+        if (!contestId || !questionId || !code || !language) {
             return res.status(400).json({ error: "Missing required fields" });
+        }
+
+        if (typeof questionId !== "string") {
+            return res.status(400).json({ error: "Invalid questionId" });
+        }
+
+        if (!contest) {
+            return res.status(404).json({ error: "Contest not found" });
         }
 
         const question = await Question.findById(questionId);
         if (!question) return res.status(404).json({ error: "Question not found" });
 
+        if (!questionBelongsToContest(contest, questionId)) {
+            return res.status(403).json({ error: "Question does not belong to contest" });
+        }
+
         const judge0Id = languageMap[language.toLowerCase()];
         if (!judge0Id) return res.status(400).json({ error: "Unsupported language" });
 
         // Submit runs against ALL test cases for scoring
-        const allTestCases = question.testcases || [];
+        const allTestCases = Array.isArray(question.testcases) ? question.testcases : [];
         const results = await executeTestCases({
             question,
             code,
@@ -211,11 +260,27 @@ const submitCode = async (req, res, next) => {
 // Save MCQ answer
 const saveMCQ = async (req, res, next) => {
     try {
-        const { contestId, questionId, answer } = req.body;
+        const { questionId, answer } = req.body;
         const userId = req.user.id || req.user._id || req.user.sub;
+
+        const { contestId, contest } = await resolveContestFromRequest(req);
+
+        if (!contestId || !questionId) {
+            return res.status(400).json({ error: "Missing required fields" });
+        }
+
+        if (typeof questionId !== "string") {
+            return res.status(400).json({ error: "Invalid questionId" });
+        }
+
+        if (!contest) return res.status(404).json({ error: "Contest not found" });
 
         const questionDoc = await Question.findById(questionId);
         if (!questionDoc) return res.status(404).json({ error: "Question not found" });
+
+        if (!questionBelongsToContest(contest, questionId)) {
+            return res.status(403).json({ error: "Question does not belong to contest" });
+        }
 
         let score = 0;
         const submittedAnswers = Array.isArray(answer) ? answer : [answer];

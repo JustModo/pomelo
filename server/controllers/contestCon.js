@@ -11,8 +11,15 @@ const validateJoinId = async (req, res, next) => {
     try {
         const { joinId } = req.body;
 
+        if (typeof joinId !== 'string' || !/^\d{6}$/.test(joinId.trim())) {
+            return res.status(400).json({
+                success: false,
+                message: "Join ID must be a 6-digit code."
+            });
+        }
+
         // Search the database for the 6-digit joinCode
-        const contest = await Contest.findOne({ joinId: joinId });
+        const contest = await Contest.findOne({ joinId: joinId.trim() });
 
         if (!contest) {
             return res.status(404).json({

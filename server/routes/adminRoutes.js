@@ -59,7 +59,7 @@ router.get("/tests/:contestId/submissions/:submissionId", requireAuth(), isAdmin
 router.get("/stats", requireAuth(), isAdmin, getAdminStats);
 
 // Generic Data Endpoints
-router.post("/data", requireAuth(), getData);
-router.post("/data/one", requireAuth(), getOne);
+router.post("/data", requireAuth(), isAdmin, getData);
+router.post("/data/one", requireAuth(), isAdmin, getOne);
 
 module.exports = router;

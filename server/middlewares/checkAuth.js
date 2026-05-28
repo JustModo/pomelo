@@ -5,6 +5,10 @@ const requireAuth = () => async (req, res, next) => {
     const { jwtVerify } = await import('jose');
 
     const authHeader = req.headers.authorization;
+    if (!process.env.AUTH_SECRET) {
+      console.error('AUTH_SECRET is not configured');
+      return res.status(500).json({ message: 'Internal Server Error' });
+    }
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ message: 'Unauthorized: No token provided' });
     }
