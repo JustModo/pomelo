@@ -13,7 +13,7 @@
   },
   "devDependencies": {
     "ts-node": "^10.9.2",
-    "turbo": "^2.8.20",
+    "turbo": "^2.9.15",
     "typescript": "^6.0.2"
   },
   "engines": {
