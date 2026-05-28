@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { TestsList } from "@/components/admin/test/tests-list";
+
+export const metadata: Metadata = {
+  title: "Manage Tests",
+  description: "View and manage code assessment tests on Pomelo.",
+};
 
 export const dynamic = "force-dynamic";
 

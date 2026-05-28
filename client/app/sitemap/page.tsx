@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import React from "react";
+
+export const metadata: Metadata = {
+  title: "Sitemap",
+  description: "View all public and administration pages available on Pomelo.",
+};
 
 const sitemap = [
   {

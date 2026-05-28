@@ -1,8 +1,18 @@
+import type { Metadata } from "next";
 import TestHeader from "@/components/attempt/test-header";
 import IntegrityMonitor from "@/components/attempt/integrity-monitor";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import React from "react";
+
+export const metadata: Metadata = {
+  title: "Test Attempt",
+  description: "Test taking assessment environment on Pomelo.",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default async function TestLayout({
   children,

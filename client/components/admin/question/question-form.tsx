@@ -27,6 +27,11 @@ interface Props {
   initialData?: Partial<QuestionSchema> | null;
 }
 
+const parsePoints = (value: string | undefined) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
 export default function QuestionForm({ type, isCreating, initialData }: Props) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -222,7 +227,7 @@ export default function QuestionForm({ type, isCreating, initialData }: Props) {
           title: rowData.title || '',
           description: rowData.description || '',
           difficulty: (rowData.difficulty?.toLowerCase() || 'easy') as 'easy' | 'medium' | 'hard',
-          points: parseInt(rowData.marks || '0', 10),
+          points: parsePoints(rowData.marks),
           questionType: rowData.questionType?.toLowerCase().includes('multiple') ? 'multiple' : 'single',
           options: options.slice(0, 4).map((text, i) => ({ id: String(i), text })),
           correctAnswer: rowData.correctAnswer || '',
@@ -257,7 +262,7 @@ export default function QuestionForm({ type, isCreating, initialData }: Props) {
           title: rowData.title || '',
           description: rowData.description || '',
           difficulty: (rowData.difficulty?.toLowerCase() || 'easy') as 'easy' | 'medium' | 'hard',
-          points: parseInt(rowData.marks || '0', 10),
+          points: parsePoints(rowData.marks),
           constraints: rowData.constraints ? [rowData.constraints] : [''],
           inputFormat: rowData.inputFormat || '',
           outputFormat: rowData.outputFormat || '',

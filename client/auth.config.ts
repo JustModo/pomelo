@@ -104,7 +104,7 @@ export const authConfig = {
                             return data.user;
                         }
 
-                        console.log('Login failed:', data.message);
+
                         return null;
                     } catch (error) {
                         console.error('Auth API error:', error);
@@ -112,7 +112,7 @@ export const authConfig = {
                     }
                 }
 
-                console.log('Invalid credentials format');
+
                 return null;
             },
         }),

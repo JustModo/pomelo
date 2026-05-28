@@ -27,6 +27,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Test } from "@/types/test";
+import { getTestStatusBadgeVariant, getTestStatusLabel } from "@/lib/test-status";
 
 export interface DashboardStats {
   activeContests: number;
@@ -127,16 +128,10 @@ export default function HeroSection({ stats, recentTests }: HeroSectionProps) {
                 >
                   <div className="flex justify-between items-start mb-2">
                     <Badge
-                      variant={
-                        test.status === "ongoing"
-                          ? "default"
-                          : test.status === "waiting"
-                            ? "secondary"
-                            : "outline"
-                      }
+                      variant={getTestStatusBadgeVariant(test.status)}
                       className="mb-2 capitalize"
                     >
-                      {test.status}
+                      {getTestStatusLabel(test.status)}
                     </Badge>
                     <ArrowUpRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                   </div>

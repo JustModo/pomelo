@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
 import {
@@ -19,15 +19,6 @@ export default function JoinContestPage() {
   const isLoaded = status !== "loading";
   const isSignedIn = status === "authenticated";
   const allFilled = otp.length === 6;
-
-
-  useEffect(() => {
-    if (session) {
-      console.log("Next-Auth Session Active:", session.user?.email);
-
-      console.log("Backend Token available:", !!session.backendToken);
-    }
-  }, [session]);
 
   const handleJoin = async () => {
     if (!allFilled) return;

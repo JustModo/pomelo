@@ -36,7 +36,7 @@ export async function saveTest(_prevState: Record<string, unknown>, data: TestSc
     const session = await auth();
     const token = session?.backendToken;
 
-    console.log("Saving test:", validatedData);
+
 
     const { hours, minutes, seconds } = parseDuration(String(validatedData.duration));
     const startDate = new Date(validatedData.startsAt);

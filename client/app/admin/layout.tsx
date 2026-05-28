@@ -1,5 +1,18 @@
+import type { Metadata } from "next";
 import AdminSidebar from "@/components/admin/admin-sidebar";
 import React from "react";
+
+export const metadata: Metadata = {
+  title: {
+    default: "Admin Dashboard",
+    template: "%s | Pomelo Admin",
+  },
+  description: "Administrative panel for Pomelo contest platform.",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default function AdminLayout({
   children,

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useCloneTest } from "@/hooks/use-clone-test";
 import {
   Card,
   CardContent,
@@ -14,13 +15,15 @@ import { Button } from "@/components/ui/button";
 import { Clock, Trash2, Copy, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Test } from "@/types/test";
-import { cloneTestAction } from "@/app/actions/clone-test";
 import { format } from "date-fns";
+import { getTestStatusBadgeVariant, getTestStatusLabel } from "@/lib/test-status";
 
 export function TestCard({ test }: { test: Test }) {
   const router = useRouter();
-  const [isCloning, setIsCloning] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const { isCloning, handleClone } = useCloneTest(test.id as string);
+  const statusLabel = getTestStatusLabel(test.status);
+  const statusVariant = getTestStatusBadgeVariant(test.status);
 
   return (
     <Card className="shadow-md bg-card border-border">
@@ -35,13 +38,10 @@ export function TestCard({ test }: { test: Test }) {
             </CardDescription>
           </div>
           <Badge
-            className={`px-3 py-1 text-xs font-medium rounded-full border shrink-0`}
+            variant={statusVariant}
+            className="px-3 py-1 text-xs font-medium rounded-full border shrink-0"
           >
-            {test.status === "completed"
-              ? "Completed"
-              : test.status === "ongoing"
-                ? "Active"
-                : "Waiting"}
+            {statusLabel}
           </Badge>
         </div>
       </CardHeader>
@@ -154,16 +154,7 @@ export function TestCard({ test }: { test: Test }) {
             onClick={async (e) => {
               e.preventDefault();
               e.stopPropagation();
-              if (confirm("Are you sure you want to duplicate this test?")) {
-                setIsCloning(true);
-                const res = await cloneTestAction(test.id as string);
-                setIsCloning(false);
-                if (res.success && res.newTestId) {
-                  router.push(`/admin/tests/${res.newTestId}/edit`);
-                } else {
-                  alert(res.message);
-                }
-              }
+              await handleClone();
             }}
           >
             {isCloning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Copy className="h-4 w-4" />}

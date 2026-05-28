@@ -2,9 +2,9 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { cloneTestAction } from "@/app/actions/clone-test";
+import { Badge } from "@/components/ui/badge";
+import { useCloneTest } from "@/hooks/use-clone-test";
 import {
   ArrowLeft,
   Edit,
@@ -16,38 +16,16 @@ import {
   Loader2,
 } from "lucide-react";
 import { Test } from "@/types/test";
+import { getTestStatusBadgeVariant, getTestStatusLabel } from "@/lib/test-status";
 
 interface TestDetailHeaderProps {
   test: Test;
 }
 
 export function TestDetailHeader({ test }: TestDetailHeaderProps) {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "bg-primary text-primary-foreground";
-      case "ongoing":
-        return "bg-primary/70 text-primary-foreground";
-      default:
-        return "bg-muted text-muted-foreground";
-    }
-  };
-
-  const router = useRouter();
-  const [isCloning, setIsCloning] = useState(false);
-
-  const handleClone = async () => {
-    if (confirm("Are you sure you want to duplicate this test?")) {
-      setIsCloning(true);
-      const res = await cloneTestAction(test.id as string);
-      setIsCloning(false);
-      if (res.success && res.newTestId) {
-        router.push(`/admin/tests/${res.newTestId}/edit`);
-      } else {
-        alert(res.message);
-      }
-    }
-  };
+  const { isCloning, handleClone } = useCloneTest(test.id as string);
+  const statusLabel = getTestStatusLabel(test.status);
+  const statusVariant = getTestStatusBadgeVariant(test.status);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -57,17 +35,6 @@ export function TestDetailHeader({ test }: TestDetailHeaderProps) {
         return <Play className="h-5 w-5 text-primary/70" />;
       default:
         return <XCircle className="h-5 w-5 text-muted-foreground" />;
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "Completed";
-      case "ongoing":
-        return "Active";
-      default:
-        return "Waiting";
     }
   };
 
@@ -102,13 +69,9 @@ export function TestDetailHeader({ test }: TestDetailHeaderProps) {
         <div className="flex items-center gap-4">
           {getStatusIcon(test.status)}
           <div className="min-w-0 flex-1">
-            <span
-              className={`px-4 py-2 text-sm font-medium rounded-full ${getStatusColor(
-                test.status
-              )} whitespace-nowrap`}
-            >
-              {getStatusText(test.status)}
-            </span>
+            <Badge variant={statusVariant} className="px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap">
+              {statusLabel}
+            </Badge>
           </div>
         </div>
 
@@ -116,7 +79,7 @@ export function TestDetailHeader({ test }: TestDetailHeaderProps) {
           {test.status === "waiting" ? (
             <>
               <Button 
-                onClick={handleClone}
+                onClick={() => handleClone()}
                 disabled={isCloning}
                 variant="outline"
                 className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors w-full sm:w-auto text-muted-foreground hover:text-foreground"
@@ -134,7 +97,7 @@ export function TestDetailHeader({ test }: TestDetailHeaderProps) {
           ) : (
             <>
               <Button 
-                onClick={handleClone}
+                onClick={() => handleClone()}
                 disabled={isCloning}
                 variant="outline"
                 className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors w-full sm:w-auto text-muted-foreground hover:text-foreground"

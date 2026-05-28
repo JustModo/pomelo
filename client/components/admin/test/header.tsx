@@ -17,7 +17,8 @@ export function TestHeader() {
       </div>
       <Link href="/admin/tests/new/edit">
         <Button>
-          <Plus /> Create New Test
+          <Plus className="h-4 w-4 mr-2" />
+          Create New Test
         </Button>
       </Link>
     </div>

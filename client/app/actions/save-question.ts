@@ -10,7 +10,7 @@ export async function saveQuestion(_prevState: Record<string, unknown>, data: Qu
     const session = await auth();
     const token = session?.backendToken;
 
-    console.log("Saving question:", validatedData);
+
 
     // Transform to backend schema
     const payload = {

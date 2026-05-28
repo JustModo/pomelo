@@ -2,15 +2,7 @@ import { notFound } from "next/navigation";
 import TestForm from "@/components/admin/test/test-form";
 import { db } from "@/lib/db";
 import { Problem } from "@/types/problem";
-
-function formatTimeForDisplay(date: Date) {
-  const hours = date.getHours();
-  const minutes = date.getMinutes();
-  const period = hours >= 12 ? "PM" : "AM";
-  const normalizedHours = hours % 12 || 12;
-
-  return `${String(normalizedHours).padStart(2, "0")}:${String(minutes).padStart(2, "0")} ${period}`;
-}
+import { formatTimeForDisplay } from "@/lib/date-utils";
 
 interface IdParams {
   id: string;

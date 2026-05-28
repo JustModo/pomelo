@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -5,6 +6,11 @@ import { RotateCcw, ShieldAlert } from "lucide-react";
 import fs from "fs/promises";
 import path from "path";
 import { resetLocalData } from "@/app/actions/reset-data";
+
+export const metadata: Metadata = {
+  title: "Settings",
+  description: "Configure system settings and local data persistence for Pomelo.",
+};
 
 const QUESTIONS_FILE = path.join(process.cwd(), "data", "questions.json");
 
