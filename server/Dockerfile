@@ -10,6 +10,7 @@ COPY server ./server
 
 RUN pnpm install --filter @pomelo/code-gen --filter @pomelo/server
 RUN pnpm --filter @pomelo/code-gen build
+RUN pnpm --filter @pomelo/server build
 
 FROM node:20-alpine
 

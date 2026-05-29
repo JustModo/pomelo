@@ -1,0 +1,24 @@
+{
+  "name": "@pomelo/admin",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite ui",
+    "build": "pnpm build:cli && pnpm build:ui",
+    "build:cli": "bun build ./src/pomelo.ts --compile --outfile ./bin/pomelo && bun build ./src/pomelod.ts --compile --outfile ./bin/pomelod",
+    "build:ui": "vite build ui",
+    "preview": "vite preview ui",
+    "clean": "rm -rf bin dist node_modules"
+  },
+  "dependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.14",
+    "@vitejs/plugin-react": "^4.3.0",
+    "typescript": "^6.0.3",
+    "vite": "^6.0.0"
+  }
+}

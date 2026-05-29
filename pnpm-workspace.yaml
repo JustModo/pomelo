@@ -2,10 +2,12 @@ packages:
   - packages/*
   - server
   - client
+  - admin
 
 onlyBuiltDependencies:
   - sharp
   - unrs-resolver
+  - esbuild
 
 overrides:
   dompurify@<3.3.2: '>=3.3.2'
