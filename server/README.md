@@ -11,6 +11,6 @@
 ### Production
 
 ```bash
- docker compose -f docker-compose.prod.yaml up --build -d
+ docker compose -f docker-compose.yaml up --build -d
 ```
 

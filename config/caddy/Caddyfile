@@ -1,1 +1,14 @@
-# TODO
+{
+	auto_https off
+}
+
+:80 {
+	encode zstd gzip
+	log {
+		output file /var/log/caddy/access.log
+	}
+
+	@api path /api/*
+	reverse_proxy @api server:8080
+	reverse_proxy client:3000
+}

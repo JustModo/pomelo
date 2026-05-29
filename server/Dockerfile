@@ -1,23 +1,31 @@
-FROM node:20-alpine
+FROM node:20-alpine AS builder
 
-# Install pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
 WORKDIR /app
 
-# Copy workspace configs
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
-
-# Copy all packages (required for workspace dependencies like code-gen)
 COPY packages ./packages
 COPY server ./server
 
-# Install dependencies
-RUN pnpm install
+RUN pnpm install --filter @pomelo/code-gen --filter @pomelo/server
+RUN pnpm --filter @pomelo/code-gen build
 
-# Change to the server directory
+FROM node:20-alpine
+
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+WORKDIR /app
+
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY --from=builder /app/packages /app/packages
+COPY --from=builder /app/server /app/server
+
+RUN pnpm install --filter @pomelo/server --prod
+
 WORKDIR /app/server
 
+ENV NODE_ENV=production
 EXPOSE 8080
 
-CMD ["pnpm", "dev"]
+CMD ["pnpm", "start"]
