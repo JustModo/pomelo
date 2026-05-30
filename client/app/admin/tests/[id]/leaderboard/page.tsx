@@ -8,6 +8,8 @@ import { LeaderboardTable } from "@/components/admin/test/leaderboard-table";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
+export const dynamic = "force-dynamic";
+
 interface LeaderboardPageProps {
   params: Promise<{ id: string }>;
 }

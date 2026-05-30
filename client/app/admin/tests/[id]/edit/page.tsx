@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { Problem } from "@/types/problem";
 import { formatTimeForDisplay } from "@/lib/date-utils";
 
+export const dynamic = "force-dynamic";
+
 interface IdParams {
   id: string;
 }

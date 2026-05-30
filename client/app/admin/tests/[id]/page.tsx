@@ -8,6 +8,8 @@ import TestEditQuestions from "@/components/admin/test/questions-list";
 import { db } from "@/lib/db";
 import { Test } from "@/types/test/test.types";
 
+export const dynamic = "force-dynamic";
+
 interface IdParams {
   id: string;
 }

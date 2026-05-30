@@ -221,7 +221,7 @@ function getPaths() {
   const root = process.env.POMELO_ROOT ?? "/opt/pomelo";
   const apiHost = process.env.POMELO_HOST ?? "127.0.0.1";
   const apiPort = Number(process.env.POMELO_PORT ?? "8462");
-    const configDir = join(root, "config");
+  const configDir = join(root, "config");
   const dataDir = join(root, "data");
   const runtimeDir = join(root, "runtime");
   const logsDir = join(runtimeDir, "logs");
@@ -235,7 +235,7 @@ function getPaths() {
     root,
     apiHost,
     apiPort,
-        configDir,
+    configDir,
     dataDir,
     runtimeDir,
     logsDir,
@@ -257,7 +257,7 @@ function getComposeConfig() {
 }
 
 function ensureBase(p) {
-    mkdirSync(p.configDir, { recursive: true });
+  mkdirSync(p.configDir, { recursive: true });
   mkdirSync(p.dataDir, { recursive: true });
   mkdirSync(p.runtimeDir, { recursive: true });
   mkdirSync(p.logsDir, { recursive: true });
@@ -278,7 +278,7 @@ function shutdown(signal) {
   logInfo(`pomelod shutting down (${signal})`);
   try {
     unlinkSync(join(paths.runtimeDir, "daemon.pid"));
-  } catch {}
+  } catch { }
   server.stop();
   process.exit(0);
 }
@@ -675,24 +675,24 @@ async function uninstall(mode = "default") {
   if (currentDir && existsSync(currentDir)) {
     try {
       await compose(currentDir, ["down"]);
-    } catch(e) {}
+    } catch (e) { }
   }
   try {
     rmSync(join(paths.root, "app"), { recursive: true, force: true });
-  } catch(e) {}
+  } catch (e) { }
   try {
     rmSync(paths.runtimeDir, { recursive: true, force: true });
-  } catch(e) {}
+  } catch (e) { }
   if (mode === "full") {
     try {
       rmSync(paths.dataDir, { recursive: true, force: true });
       rmSync(paths.configDir, { recursive: true, force: true });
-    } catch(e) {}
+    } catch (e) { }
   }
   if (mode !== "keep-data" && mode !== "full") {
     try {
       rmSync(paths.configDir, { recursive: true, force: true });
-    } catch(e) {}
+    } catch (e) { }
   }
   return { status: "uninstalled", mode };
 }

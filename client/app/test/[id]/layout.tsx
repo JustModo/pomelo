@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { auth } from "@/auth";
 
+export const dynamic = "force-dynamic";
+
 interface Params {
   id: string;
 }
