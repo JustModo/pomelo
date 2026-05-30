@@ -4,5 +4,9 @@ node_modules
 .pnpm
 .git
 .turbo
-dist
-build
+src
+**/src
+*.ts
+*.tsx
+!client/.next/standalone/node_modules
+!client/.next/standalone/**/node_modules

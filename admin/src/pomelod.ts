@@ -68,15 +68,15 @@ async function handleApi(req, url, method) {
     }
 
     if (method === "POST" && url.pathname === "/api/start") {
-      return json({ status: "ok", data: await startServices() });
+      return streamComposeResponse("start", ["up", "-d"]);
     }
 
     if (method === "POST" && url.pathname === "/api/stop") {
-      return json({ status: "ok", data: await stopServices() });
+      return streamComposeResponse("stop", ["stop"]);
     }
 
     if (method === "POST" && url.pathname === "/api/restart") {
-      return json({ status: "ok", data: await restartServices() });
+      return streamComposeResponse("restart", ["up", "-d"]);
     }
 
     if (method === "GET" && url.pathname === "/api/logs") {
@@ -333,44 +333,70 @@ async function compose(releaseDir, extraArgs) {
 
 
 
-async function startServices() {
-  return runExclusive("start", async () => {
-    await requireDocker();
-    const releaseDir = getCurrentReleaseDir();
-    ensureConfigDefaults(releaseDir);
-    const upRes = await compose(releaseDir, ["up", "-d"]);
-    if (upRes.code !== 0) {
-      logError(upRes.stderr || upRes.stdout);
-      throw createError("Start failure", 1);
-    }
-    return { status: "started" };
-  });
-}
+async function streamComposeResponse(operation: string, composeExtraArgs: string[]) {
+  // Check exclusivity
+  if (currentOperation.status === "running") {
+    return errorResponse("Another operation is in progress", 1);
+  }
 
-async function stopServices() {
-  return runExclusive("stop", async () => {
-    await requireDocker();
-    const releaseDir = getCurrentReleaseDir();
-    const stopRes = await compose(releaseDir, ["stop"]);
-    if (stopRes.code !== 0) {
-      logError(stopRes.stderr || stopRes.stdout);
-      throw createError("Stop failure", 1);
-    }
-    return { status: "stopped" };
-  });
-}
+  // Check docker
+  if (!(await dockerAvailable())) {
+    return errorResponse("Docker unavailable", 3, 503);
+  }
 
-async function restartServices() {
-  return runExclusive("restart", async () => {
-    await requireDocker();
-    const releaseDir = getCurrentReleaseDir();
+  const releaseDir = getCurrentReleaseDir();
+
+  // Ensure config for start/restart
+  if (operation === "start" || operation === "restart") {
     ensureConfigDefaults(releaseDir);
-    const restartRes = await compose(releaseDir, ["restart"]);
-    if (restartRes.code !== 0) {
-      logError(restartRes.stderr || restartRes.stdout);
-      throw createError("Restart failure", 1);
-    }
-    return { status: "restarted" };
+  }
+
+  currentOperation = { status: "running", name: operation, startedAt: new Date().toISOString() };
+
+  const proc = Bun.spawn({
+    cmd: ["docker", ...composeArgs(releaseDir, composeExtraArgs)],
+    cwd: releaseDir,
+    stdout: "pipe",
+    stderr: "pipe",
+    env: process.env,
+  });
+
+  const encoder = new TextEncoder();
+  let stdoutDone = false;
+  let stderrDone = false;
+
+  const stream = new ReadableStream({
+    start(controller) {
+      const tryClose = (exitCode: number) => {
+        if (stdoutDone && stderrDone) {
+          currentOperation = { status: "idle" };
+          controller.enqueue(encoder.encode(`\n[POMELO_EXIT:${exitCode}]\n`));
+          controller.close();
+        }
+      };
+
+      proc.stdout.pipeTo(new WritableStream({
+        write(chunk) { controller.enqueue(chunk); },
+        close() { stdoutDone = true; },
+      }));
+      proc.stderr.pipeTo(new WritableStream({
+        write(chunk) { controller.enqueue(chunk); },
+        close() { stderrDone = true; },
+      }));
+
+      proc.exited.then((exitCode) => {
+        // Wait briefly for pipes to flush
+        setTimeout(() => {
+          stdoutDone = true;
+          stderrDone = true;
+          tryClose(exitCode);
+        }, 100);
+      });
+    },
+  });
+
+  return new Response(stream, {
+    headers: { "content-type": "text/plain; charset=utf-8" },
   });
 }
 
@@ -445,6 +471,7 @@ async function logsResponse(params) {
 
   const proc = Bun.spawn({
     cmd: ["docker", ...composeArgs(releaseDir, args)],
+    cwd: releaseDir,
     stdout: "pipe",
     stderr: "pipe",
     env: process.env,
@@ -671,12 +698,41 @@ function createError(message, code) {
 
 
 async function uninstall(mode = "default") {
+  // 1. Stop Docker services
   const currentDir = getCurrentReleaseDir();
+  let output = "";
   if (currentDir && existsSync(currentDir)) {
     try {
-      await compose(currentDir, ["down"]);
+      const res = await compose(currentDir, ["down"]);
+      output = (res.stderr + "\n" + res.stdout).trim();
     } catch (e) { }
   }
+
+  // 2. Clean up systemd service (disable + remove — don't stop, we ARE the service)
+  const serviceFile = "/etc/systemd/system/pomelod.service";
+  try {
+    await run("systemctl", ["disable", "pomelod"]);
+  } catch (e) { }
+  try {
+    if (existsSync(serviceFile)) {
+      unlinkSync(serviceFile);
+      logInfo("Removed systemd service file");
+    }
+  } catch (e) { }
+  try {
+    await run("systemctl", ["daemon-reload"]);
+  } catch (e) { }
+
+  // 3. Remove CLI symlink
+  const cliSymlink = "/usr/local/bin/pomelo";
+  try {
+    if (existsSync(cliSymlink)) {
+      unlinkSync(cliSymlink);
+      logInfo("Removed CLI symlink");
+    }
+  } catch (e) { }
+
+  // 4. Remove application files
   try {
     rmSync(join(paths.root, "app"), { recursive: true, force: true });
   } catch (e) { }
@@ -694,5 +750,5 @@ async function uninstall(mode = "default") {
       rmSync(paths.configDir, { recursive: true, force: true });
     } catch (e) { }
   }
-  return { status: "uninstalled", mode };
+  return { status: "uninstalled", mode, output };
 }

@@ -2,3 +2,4 @@ node_modules
 .turbo
 .env*
 !.env.example
+build.tar.gz
