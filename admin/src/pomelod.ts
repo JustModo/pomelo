@@ -99,7 +99,7 @@ async function handleApi(req, url, method) {
 
     if (method === "POST" && url.pathname === "/api/uninstall") {
       const body = await readJson(req);
-      return json({ status: "ok", data: await uninstall(body.mode) });
+      return streamUninstall(body.mode);
     }
 
     if (method === "GET" && url.pathname === "/api/storage") {
@@ -415,7 +415,12 @@ async function getStatus() {
     const res = await compose(join(paths.root, "app"), ["ps", "--format", "json"]);
     if (res.code === 0 && res.stdout.trim()) {
       try {
-        containers = JSON.parse(res.stdout);
+        const stdout = res.stdout.trim();
+        if (stdout.startsWith("[")) {
+          containers = JSON.parse(stdout);
+        } else {
+          containers = stdout.split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line));
+        }
       } catch {
         containers = [];
       }
@@ -688,58 +693,98 @@ function createError(message, code) {
 }
 
 
-async function uninstall(mode = "default") {
-  // 1. Stop Docker services
+function streamUninstall(mode = "default") {
+  const encoder = new TextEncoder();
   const currentDir = getCurrentReleaseDir();
-  let output = "";
-  if (currentDir && existsSync(currentDir)) {
-    try {
-      const res = await compose(currentDir, ["down"]);
-      output = (res.stderr + "\n" + res.stdout).trim();
-    } catch (e) { }
-  }
+  
+  return new Response(new ReadableStream({
+    async start(controller) {
+      try {
+        if (currentDir && existsSync(currentDir)) {
+          controller.enqueue(encoder.encode("Stopping Docker services...\n"));
+          const proc = Bun.spawn({
+            cmd: ["docker", ...composeArgs(currentDir, ["down"])],
+            cwd: currentDir,
+            stdout: "pipe",
+            stderr: "pipe",
+            env: process.env,
+          });
+          
+          let stdoutDone = false;
+          let stderrDone = false;
+          
+          const tryClose = async () => {
+             if (stdoutDone && stderrDone) {
+                 await proc.exited;
+                 await finishUninstall(controller, mode, encoder);
+             }
+          };
 
-  // 2. Clean up systemd service (disable + remove — don't stop, we ARE the service)
+          const pump = async (stream: ReadableStream, isStdout: boolean) => {
+            const reader = stream.getReader();
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              controller.enqueue(value);
+            }
+            if (isStdout) stdoutDone = true; else stderrDone = true;
+            tryClose();
+          };
+          
+          pump(proc.stdout, true);
+          pump(proc.stderr, false);
+        } else {
+            await finishUninstall(controller, mode, encoder);
+        }
+      } catch (e: any) {
+         controller.enqueue(encoder.encode(`Error: ${e.message}\n[POMELO_EXIT:1]\n`));
+         controller.close();
+      }
+    }
+  }), {
+    headers: { "Content-Type": "text/plain" }
+  });
+}
+
+async function finishUninstall(controller: any, mode: string, encoder: any) {
   const serviceFile = "/etc/systemd/system/pomelod.service";
   try {
+    controller.enqueue(encoder.encode("Disabling systemd service...\n"));
     await run("systemctl", ["disable", "pomelod"]);
-  } catch (e) { }
-  try {
     if (existsSync(serviceFile)) {
       unlinkSync(serviceFile);
-      logInfo("Removed systemd service file");
     }
-  } catch (e) { }
-  try {
     await run("systemctl", ["daemon-reload"]);
   } catch (e) { }
 
-  // 3. Remove CLI symlink
   const cliSymlink = "/usr/local/bin/pomelo";
   try {
     if (existsSync(cliSymlink)) {
+      controller.enqueue(encoder.encode("Removing CLI symlink...\n"));
       unlinkSync(cliSymlink);
-      logInfo("Removed CLI symlink");
     }
   } catch (e) { }
 
-  // 4. Remove application files
   try {
+    controller.enqueue(encoder.encode("Removing application files...\n"));
     rmSync(join(paths.root, "app"), { recursive: true, force: true });
-  } catch (e) { }
-  try {
     rmSync(paths.runtimeDir, { recursive: true, force: true });
   } catch (e) { }
+
   if (mode === "full") {
     try {
+      controller.enqueue(encoder.encode("Removing data and configuration...\n"));
       rmSync(paths.dataDir, { recursive: true, force: true });
       rmSync(paths.configDir, { recursive: true, force: true });
     } catch (e) { }
   }
   if (mode !== "keep-data" && mode !== "full") {
     try {
+      controller.enqueue(encoder.encode("Removing configuration...\n"));
       rmSync(paths.configDir, { recursive: true, force: true });
     } catch (e) { }
   }
-  return { status: "uninstalled", mode, output };
+  
+  controller.enqueue(encoder.encode("[POMELO_EXIT:0]\n"));
+  controller.close();
 }

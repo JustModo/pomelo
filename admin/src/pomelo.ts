@@ -123,10 +123,14 @@ async function handleSimpleCommand(method: string, path: string, successMessage:
   logSuccess(successMessage);
 }
 
-async function handleStreamingCommand(method: string, path: string, successMessage: string) {
+async function handleStreamingCommand(method: string, path: string, successMessage: string, body?: any) {
   const url = `${API_BASE}${path}`;
   try {
-    const res = await fetch(url, { method });
+    const res = await fetch(url, { 
+      method,
+      headers: body ? { "Content-Type": "application/json" } : undefined,
+      body: body ? JSON.stringify(body) : undefined,
+    });
 
     // If the daemon returned a JSON error (e.g. "Docker unavailable")
     const contentType = res.headers.get("content-type") || "";
@@ -192,25 +196,24 @@ async function handleStatus() {
   }
 
   console.log(`  ${colors.bold}Version:${colors.reset}        ${data.currentVersion || "unknown"}`);
-  console.log(`  ${colors.bold}Docker Ready:${colors.reset}   ${data.dockerAvailable ? colors.green + "Yes" + colors.reset : colors.red + "No" + colors.reset}`);
   
-  if (data.operation && data.operation.status !== "idle") {
-    console.log(`  ${colors.bold}Operation:${colors.reset}      ${colors.yellow}${data.operation.name} (${data.operation.status})${colors.reset}`);
-  } else {
-    console.log(`  ${colors.bold}Operation:${colors.reset}      ${colors.dim}Idle${colors.reset}`);
-  }
+  const isRunning = data.containers && data.containers.length > 0;
+  console.log(`  ${colors.bold}Status:${colors.reset}         ${isRunning ? colors.green + "Running" + colors.reset : colors.dim + "Stopped" + colors.reset}`);
   
   console.log("");
   
-  if (data.containers && data.containers.length > 0) {
+  if (isRunning) {
     console.log(`  ${colors.bold}Containers:${colors.reset}`);
+    const maxNameLen = Math.max(...data.containers.map((c: any) => (c.Name || c.name || "unknown").length));
+    const namePad = Math.max(20, maxNameLen + 2);
+
     for (const container of data.containers) {
       const name = container.Name || container.name || "unknown";
       const state = container.State || container.state || "unknown";
       const statusStr = container.Status || container.status || "";
       
       const stateColor = state.toLowerCase() === "running" ? colors.green : colors.red;
-      console.log(`    ${colors.cyan}${name.padEnd(20)}${colors.reset} ${stateColor}${state.padEnd(10)}${colors.reset} ${colors.dim}${statusStr}${colors.reset}`);
+      console.log(`    ${colors.cyan}${name.padEnd(namePad)}${colors.reset} ${stateColor}${state.padEnd(10)}${colors.reset} ${colors.dim}${statusStr}${colors.reset}`);
     }
   } else {
     console.log(`  ${colors.dim}No containers are currently running.${colors.reset}`);
@@ -299,7 +302,7 @@ async function handleUninstall(rest: string[]) {
   }
   
   console.log("");
-  await handleSimpleCommand("POST", "/api/uninstall", "Pomelo uninstalled successfully.", { mode });
+  await handleStreamingCommand("POST", "/api/uninstall", "Pomelo uninstalled successfully.", { mode });
 }
 
 async function ensureDaemon() {
