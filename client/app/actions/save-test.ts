@@ -3,6 +3,7 @@
 import { testSchema, TestSchema } from "@/types/test";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
+import { getBaseUrl } from "@/lib/env";
 
 function parseDuration(duration: string) {
   const match = duration.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
@@ -70,8 +71,8 @@ export async function saveTest(_prevState: Record<string, unknown>, data: TestSc
     // Determine URL and Method
     const isUpdate = !!validatedData.id;
     const url = isUpdate
-      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/tests/${validatedData.id}/edit`
-      : `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/tests/create`;
+      ? `${getBaseUrl()}/api/admin/tests/${validatedData.id}/edit`
+      : `${getBaseUrl()}/api/admin/tests/create`;
     const method = isUpdate ? "PUT" : "POST";
 
     const res = await fetch(url, {

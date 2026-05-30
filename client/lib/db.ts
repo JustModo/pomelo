@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+import { getBaseUrl } from "@/lib/env";
+const BASE_URL = getBaseUrl();
 
 type Collection = "questions" | "contests" | "submissions";
 

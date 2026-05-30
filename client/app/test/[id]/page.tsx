@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Clock, AlertCircle, Calendar, Hourglass } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { getBaseUrl } from "@/lib/env";
 
 interface ContestDetails {
   title: string;
@@ -54,7 +55,7 @@ export default function ContestLanding() {
     if (status !== "authenticated" || !session?.backendToken || !testid) return;
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/test/${testid}`, {
+      const res = await fetch(`${getBaseUrl()}/api/test/${testid}`, {
         headers: {
           "Authorization": `Bearer ${session.backendToken}`,
           "Content-Type": "application/json"
@@ -106,7 +107,7 @@ export default function ContestLanding() {
         }
       }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/test/start`, {
+      const res = await fetch(`${getBaseUrl()}/api/test/start`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${session?.backendToken}`,
@@ -120,7 +121,7 @@ export default function ContestLanding() {
         toast.success("Good luck!");
 
         // Fetch problems to redirect to the first one
-        const questionsRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/test/${testid}/data`, {
+        const questionsRes = await fetch(`${getBaseUrl()}/api/test/${testid}/data`, {
           headers: { "Authorization": `Bearer ${session?.backendToken}` }
         });
         const questionsData = await questionsRes.json();

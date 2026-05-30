@@ -3,6 +3,7 @@ import type { NextAuthConfig } from "next-auth"
 import Credentials from "next-auth/providers/credentials"
 import { z } from "zod"
 import { SignJWT } from "jose"
+import { getBaseUrl } from "@/lib/env";
 
 // Helper to mint a token for the Express Request
 // this minting happens on Next.js server side.
@@ -92,7 +93,7 @@ export const authConfig = {
                     const { email, password } = parsedCredentials.data;
 
                     try {
-                        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/login`, {
+                        const res = await fetch(`${getBaseUrl()}/api/auth/login`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ email, password })

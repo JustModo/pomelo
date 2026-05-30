@@ -2,7 +2,6 @@
 import { existsSync } from "fs";
 
 const API_BASE = process.env.POMELO_API_URL ?? "http://127.0.0.1:8462";
-const DAEMON_BIN = process.env.POMELO_DAEMON_BIN ?? "/opt/pomelo/installer/bin/pomelod"; // will use $POMELO_ROOT/app/admin/bin/pomelod in reality if not set, wait, wait, DAEMON_BIN should use POMELO_ROOT if available. Let's fix that too.
 const APP_ROOT = process.env.POMELO_ROOT ?? "/opt/pomelo";
 const DEFAULT_DAEMON_BIN = `${APP_ROOT}/app/admin/bin/pomelod`;
 
@@ -287,7 +286,11 @@ async function handleUninstall(rest: string[]) {
   process.stdout.write(`\n  ${colors.bold}${colors.magenta}▸${colors.reset} Are you sure you want to proceed? [y/N]: `);
   
   const confirm = await new Promise<string>((resolve) => {
-    process.stdin.once("data", (data) => resolve(data.toString().trim()));
+    process.stdin.resume();
+    process.stdin.once("data", (data) => {
+      process.stdin.pause();
+      resolve(data.toString().trim());
+    });
   });
   
   if (confirm.toLowerCase() !== "y") {

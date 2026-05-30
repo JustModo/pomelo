@@ -9,6 +9,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { toast } from "sonner";
+import { getBaseUrl } from "@/lib/env";
 
 export default function JoinContestPage() {
   const router = useRouter();
@@ -26,7 +27,7 @@ export default function JoinContestPage() {
     setIsLoading(true);
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/test/join`,
+        `${getBaseUrl()}/api/test/join`,
         {
           method: "POST",
           credentials: "include",

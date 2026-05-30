@@ -2,6 +2,7 @@ import React from "react";
 import HeroSection, { DashboardStats } from "@/components/admin/hero-section";
 import { auth } from "@/auth";
 import { Test } from "@/types/test";
+import { getBaseUrl } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +11,7 @@ async function getAdminStats() {
     const session = await auth();
     const token = session?.backendToken;
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/stats`, {
+    const res = await fetch(`${getBaseUrl()}/api/admin/stats`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

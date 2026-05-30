@@ -3,6 +3,7 @@
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
 import { z } from "zod";
+import { getBaseUrl } from "@/lib/env";
 
 const RegisterSchema = z.object({
     name: z.string().min(2),
@@ -41,7 +42,7 @@ export async function register(prevState: string | undefined, formData: FormData
     const { name, email, password } = validatedFields.data;
 
     try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/register`, {
+        const res = await fetch(`${getBaseUrl()}/api/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, email, password })

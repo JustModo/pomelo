@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { NextResponse } from "next/server";
+import { getBaseUrl } from "@/lib/env";
 
 interface RouteContext {
   params: Promise<{
@@ -21,7 +22,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
 
     const { id } = await context.params;
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/tests/${id}`,
+      `${getBaseUrl()}/api/admin/tests/${id}`,
       {
         method: "DELETE",
         headers: {

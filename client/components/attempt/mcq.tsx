@@ -11,6 +11,7 @@ import { Problem, MCQProblem } from "@/types/problem";
 import { useRouter, useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
+import { getBaseUrl } from "@/lib/env";
 
 interface MCQScreenProps {
   problem: MCQProblem;
@@ -37,7 +38,7 @@ export default function MCQScreen({ problem, problems }: MCQScreenProps) {
     if (!session?.backendToken || !params.testid) return;
     setIsSaving(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/test/${params.testid}/mcq`, {
+      const res = await fetch(`${getBaseUrl()}/api/test/${params.testid}/mcq`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -8,6 +8,7 @@ import {
   AUTO_SUBMIT_REASON,
   clearAttemptIntegrityState,
 } from "@/lib/attempt-integrity";
+import { getBaseUrl } from "@/lib/env";
 
 interface CompleteTestOptions {
   forced?: boolean;
@@ -35,7 +36,7 @@ export function useTestCompletion() {
     setIsSubmitting(true);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/test/${testId}/end`, {
+      const res = await fetch(`${getBaseUrl()}/api/test/${testId}/end`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${session.backendToken}`,

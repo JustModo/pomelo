@@ -4,6 +4,7 @@ import React from "react";
 import { CodingProblem, MCQProblem, Problem } from "@/types/problem";
 import MCQScreen from "@/components/attempt/mcq";
 import { notFound } from "next/navigation";
+import { getBaseUrl } from "@/lib/env";
 
 interface Props {
   params: Promise<{
@@ -20,7 +21,7 @@ export default async function TestContentPage(props: Props) {
   const session = await auth();
 
   // Fetch contest data via student API
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/test/${testid}/data`, {
+  const res = await fetch(`${getBaseUrl()}/api/test/${testid}/data`, {
     headers: {
       "Authorization": `Bearer ${session?.backendToken}`,
       "Content-Type": "application/json"

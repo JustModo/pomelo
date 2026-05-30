@@ -6,6 +6,7 @@ import { BadgeCheck, ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter, usePathname, useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useTestCompletion } from "./use-test-completion";
+import { getBaseUrl } from "@/lib/env";
 
 type ProblemMeta = {
   id: string;
@@ -41,7 +42,7 @@ export default function TestHeader({ problems }: TestHeaderProps) {
     const verifyStatus = async () => {
       if (!session?.backendToken || !params.testid) return;
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/test/${params.testid}/data`, {
+        const res = await fetch(`${getBaseUrl()}/api/test/${params.testid}/data`, {
           headers: {
             "Authorization": `Bearer ${session.backendToken}`,
             "Content-Type": "application/json"

@@ -2,6 +2,7 @@
 
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
+import { getBaseUrl } from "@/lib/env";
 
 export async function importQuestions(type: "mcq" | "coding", formData: FormData) {
     try {
@@ -17,7 +18,7 @@ export async function importQuestions(type: "mcq" | "coding", formData: FormData
         uploadFormData.append("file", file);
 
         const res = await fetch(
-            `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/questions/import/${type}`,
+            `${getBaseUrl()}/api/admin/questions/import/${type}`,
             {
                 method: "POST",
                 headers: {

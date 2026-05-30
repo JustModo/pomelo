@@ -2,13 +2,14 @@
 
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
+import { getBaseUrl } from "@/lib/env";
 
 export async function cloneTestAction(id: string) {
     try {
         const session = await auth();
         const token = session?.backendToken;
 
-        const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/tests/${id}/clone`;
+        const url = `${getBaseUrl()}/api/admin/tests/${id}/clone`;
 
         const res = await fetch(url, {
             method: "POST",

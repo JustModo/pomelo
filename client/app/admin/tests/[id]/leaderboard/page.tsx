@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { LeaderboardTable } from "@/components/admin/test/leaderboard-table";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { getBaseUrl } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +22,7 @@ async function getLeaderboardData(id: string) {
   if (!token) return { success: false, status: 401 };
 
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/test/${id}/leaderboard`, {
+    const res = await fetch(`${getBaseUrl()}/api/test/${id}/leaderboard`, {
       headers: { Authorization: `Bearer ${token}` },
       cache: "no-store",
     });

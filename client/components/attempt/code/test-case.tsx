@@ -11,6 +11,7 @@ import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { CodingProblem } from "@/types/problem";
+import { getBaseUrl } from "@/lib/env";
 
 interface TestCaseResult {
   testCase: number;
@@ -43,7 +44,7 @@ export default function TestCasePanel({
     setIsRunning(true);
     setView("sample");
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/test/${testid}/run`, {
+      const res = await fetch(`${getBaseUrl()}/api/test/${testid}/run`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -71,7 +72,7 @@ export default function TestCasePanel({
     setIsRunning(true);
     setView("hidden");
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/test/${testid}/submit`, {
+      const res = await fetch(`${getBaseUrl()}/api/test/${testid}/submit`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

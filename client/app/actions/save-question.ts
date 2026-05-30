@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { questionSchema, type QuestionSchema } from "@/types/problem";
-import { auth } from "@/auth";
+import { auth } from "@/auth";import { getBaseUrl } from "@/lib/env";
+
 
 export async function saveQuestion(_prevState: Record<string, unknown>, data: QuestionSchema) {
   try {
@@ -39,8 +40,8 @@ export async function saveQuestion(_prevState: Record<string, unknown>, data: Qu
     // Determine URL and Method
     const isUpdate = !!validatedData.id;
     const url = isUpdate
-      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/questions/${validatedData.id}/edit`
-      : `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/questions/create`;
+      ? `${getBaseUrl()}/api/admin/questions/${validatedData.id}/edit`
+      : `${getBaseUrl()}/api/admin/questions/create`;
     const method = isUpdate ? "PUT" : "POST";
 
     const res = await fetch(url, {

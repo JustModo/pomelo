@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { auth } from "@/auth";
+import { getBaseUrl } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,7 @@ export async function generateMetadata({
   }
 
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/test/${id}`, {
+    const res = await fetch(`${getBaseUrl()}/api/test/${id}`, {
       headers: {
         "Authorization": `Bearer ${session.backendToken}`,
         "Content-Type": "application/json",

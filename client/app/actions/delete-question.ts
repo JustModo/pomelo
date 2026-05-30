@@ -2,6 +2,7 @@
 
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
+import { getBaseUrl } from "@/lib/env";
 
 export async function deleteQuestion(id: string) {
     try {
@@ -12,7 +13,7 @@ export async function deleteQuestion(id: string) {
             throw new Error("Authentication required");
         }
 
-        const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/questions/${id}`;
+        const url = `${getBaseUrl()}/api/admin/questions/${id}`;
 
         const res = await fetch(url, {
             method: "DELETE",
