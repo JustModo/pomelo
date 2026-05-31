@@ -31,7 +31,6 @@ export default function JoinContestPage() {
       const result = await joinTest(otp);
 
       if (result.success) {
-        toast.success(`Joining: ${result.title}`);
         router.push(`/test/${result.contestId}`);
       } else {
         toast.error(result.message || "Invalid Join ID");

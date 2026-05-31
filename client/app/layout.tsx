@@ -57,7 +57,7 @@ export default function RootLayout({
   return (
     <SessionProvider>
       <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
-        <body className="antialiased">
+        <body className="antialiased h-screen overflow-hidden">
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
