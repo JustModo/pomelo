@@ -226,6 +226,7 @@ function RegisterForm() {
                   {loading ? "Loading..." : "Continue"}
                 </Button>
 
+                {/*
                 <div className="flex items-center my-2">
                   <hr className="grow border-muted" />
                   <span className="px-4 text-sm text-muted-foreground">OR</span>
@@ -251,6 +252,7 @@ function RegisterForm() {
                     </>
                   )}
                 </Button>
+                */}
               </div>
             </form>
 

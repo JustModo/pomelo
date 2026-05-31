@@ -26,7 +26,7 @@ const removeTrailingLineCommands = (output) => {
 };
 
 // Common logic for executing code against test cases
-const executeTestCases = async ({ question, code, language, testCases, judge0Id }) => {
+const executeTestCases = async ({ question, code, language, testCases, judge0Id, forceVisible = false }) => {
     const judge0Url = process.env.JUDGE0_URL || 'http://localhost:2358';
 
     // Wrap code
@@ -91,12 +91,12 @@ const executeTestCases = async ({ question, code, language, testCases, judge0Id 
             return {
                 testCase: index + 1,
                 passed: isPassed,
-                input: tc.isVisible ? input : undefined, // Hide input if not visible
-                expectedOutput: tc.isVisible ? expectedOutput : undefined,
-                actualOutput: tc.isVisible ? removeTrailingLineCommands(decodedStdout || "") : undefined,
+                input: (forceVisible || tc.isVisible) ? input : undefined, // Hide input if not visible
+                expectedOutput: (forceVisible || tc.isVisible) ? expectedOutput : undefined,
+                actualOutput: (forceVisible || tc.isVisible) ? removeTrailingLineCommands(decodedStdout || "") : undefined,
                 error: decodedStderr || decodedCompileOutput || (result.status ? result.status.description : "Unknown Error"),
                 status: result.status ? result.status.description : "Unknown",
-                isVisible: tc.isVisible
+                isVisible: forceVisible || tc.isVisible
             };
         } catch (err) {
             return {
@@ -115,7 +115,13 @@ const executeTestCases = async ({ question, code, language, testCases, judge0Id 
 // @desc    Run code against visible test cases only
 const runCode = async (req, res, next) => {
     try {
-        const { questionId, code, language } = req.body;
+        const { questionId, language, isBase64 } = req.body;
+        let { code } = req.body;
+        
+        if (isBase64 && code) {
+            code = Buffer.from(code, 'base64').toString('utf-8');
+        }
+
         if (!questionId || !code || !language) {
             return res.status(400).json({ success: false, error: "Missing required fields" });
         }
@@ -156,7 +162,8 @@ const runCode = async (req, res, next) => {
             code,
             language,
             testCases: testToRun,
-            judge0Id
+            judge0Id,
+            forceVisible: true
         });
 
         return res.status(200).json({
@@ -173,7 +180,13 @@ const runCode = async (req, res, next) => {
 // @desc    Submit code and save results
 const submitCode = async (req, res, next) => {
     try {
-        const { questionId, code, language } = req.body;
+        const { questionId, language, isBase64 } = req.body;
+        let { code } = req.body;
+        
+        if (isBase64 && code) {
+            code = Buffer.from(code, 'base64').toString('utf-8');
+        }
+
         const userId = req.user.id || req.user._id || req.user.sub;
         const { contestId, contest } = await resolveContestFromRequest(req);
         // contestId is validated by middleware if part of URL or body, but here middleware is usually mounted on /:id

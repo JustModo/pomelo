@@ -41,13 +41,24 @@ export async function submitMcq(contestId: string, questionId: string, answer: a
 export async function runCode(contestId: string, questionId: string, code: string, language: string) {
   return fetchBackend(`/api/test/${contestId}/run`, {
     method: "POST",
-    body: JSON.stringify({ questionId, code, language }),
+    body: JSON.stringify({ 
+      questionId, 
+      code: Buffer.from(code).toString('base64'), 
+      language, 
+      isBase64: true 
+    }),
   });
 }
 
 export async function submitCode(contestId: string, questionId: string, code: string, language: string) {
   return fetchBackend(`/api/test/${contestId}/submit`, {
     method: "POST",
-    body: JSON.stringify({ contestId, questionId, code, language }),
+    body: JSON.stringify({ 
+      contestId, 
+      questionId, 
+      code: Buffer.from(code).toString('base64'), 
+      language, 
+      isBase64: true 
+    }),
   });
 }

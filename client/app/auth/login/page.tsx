@@ -159,6 +159,7 @@ function LoginForm() {
                 </div>
               </div>
 
+              {/*
               <div className="text-right -mt-2">
                 <Link
                   href="/auth/forgot-password"
@@ -167,6 +168,7 @@ function LoginForm() {
                   Forgot Password?
                 </Link>
               </div>
+              */}
 
               <Button
                 type="submit"
@@ -197,6 +199,7 @@ function LoginForm() {
                 </Button>
               </div>
 
+              {/*
               <div className="flex items-center my-6">
                 <hr className="grow border-muted" />
                 <span className="px-4 text-sm text-muted-foreground">OR</span>
@@ -222,6 +225,7 @@ function LoginForm() {
                   </>
                 )}
               </Button>
+              */}
             </form>
 
             <p className="text-xs text-muted-foreground text-center">

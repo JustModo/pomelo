@@ -115,9 +115,19 @@ export default function ContestLanding() {
         }
       } else {
         toast.error(result.error || result.message || "Failed to start session");
+        if (document.fullscreenElement && document.exitFullscreen) {
+          try {
+            await document.exitFullscreen();
+          } catch {}
+        }
       }
     } catch {
       toast.error("Network error: Could not start assessment");
+      if (document.fullscreenElement && document.exitFullscreen) {
+        try {
+          await document.exitFullscreen();
+        } catch {}
+      }
     }
   };
 
@@ -143,96 +153,91 @@ export default function ContestLanding() {
 
   return (
     <>
-      <main className="p-6 md:p-10 max-w-5xl mx-auto space-y-8 min-h-screen pt-24">
-        <div className="flex flex-col md:flex-row gap-8">
-          <div className="flex-1 space-y-8">
-            <div className="space-y-2">
-              <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">{details?.title}</h1>
-              <p className="text-xl text-muted-foreground">{details?.description}</p>
+      <main className="min-h-screen flex flex-col lg:flex-row pt-16 lg:pt-0">
+        {/* Left Content Area */}
+        <div className="flex-1 px-6 md:px-16 lg:px-24 xl:px-32 py-12 lg:py-36 space-y-16">
+          {/* Hero Section */}
+          <div className="space-y-8">
+            <div className="inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold text-primary bg-primary/5">
+              Assessment Environment
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="flex items-center p-4 bg-secondary/50 rounded-lg border">
-                <Calendar className="mr-3 text-primary h-5 w-5" />
-                <div>
-                  <p className="text-xs uppercase font-bold text-muted-foreground">Start Date</p>
-                  <p className="font-semibold">{details ? new Date(details.startTime).toLocaleDateString() : "-"}</p>
-                </div>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1]">{details?.title}</h1>
+            <p className="text-xl text-muted-foreground leading-relaxed max-w-2xl">{details?.description}</p>
+            
+            <div className="flex flex-wrap items-center gap-8 pt-4 text-sm font-medium text-muted-foreground">
+              <div className="flex items-center gap-3">
+                <Calendar className="h-5 w-5 text-primary/60" />
+                <span>{details ? new Date(details.startTime).toLocaleDateString() : "-"}</span>
               </div>
-              <div className="flex items-center p-4 bg-secondary/50 rounded-lg border">
-                <Hourglass className="mr-3 text-primary h-5 w-5" />
-                <div>
-                  <p className="text-xs uppercase font-bold text-muted-foreground">Duration</p>
-                  <p className="font-semibold">{details?.duration} Minutes</p>
-                </div>
+              <div className="flex items-center gap-3">
+                <Clock className="h-5 w-5 text-primary/60" />
+                <span>{details ? new Date(details.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "-"}</span>
               </div>
-              <div className="flex items-center p-4 bg-primary/10 rounded-lg border border-primary/20">
-                <Clock className="mr-3 text-primary h-5 w-5" />
-                <div>
-                  <p className="text-xs uppercase font-bold text-muted-foreground">Start Time</p>
-                  <p className="font-semibold text-primary">
-                    {details ? new Date(details.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "-"}
-                  </p>
-                </div>
+              <div className="flex items-center gap-3">
+                <Hourglass className="h-5 w-5 text-primary/60" />
+                <span>{details?.duration} Minutes</span>
               </div>
-            </div>
-
-            <div className="bg-card p-8 rounded-2xl border shadow-sm space-y-6">
-              <div className="flex items-center space-x-2 text-xl font-bold border-b pb-4">
-                <AlertCircle className="text-yellow-500" />
-                <h2>Test Guidelines</h2>
-              </div>
-              <ScrollArea className="max-h-[400px]">
-                <ul className="space-y-4">
-                  {details?.rules?.map((rule, i) => (
-                    <li key={i} className="flex items-start">
-                      <span className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/10 text-primary text-xs font-bold mr-3 mt-0.5 shrink-0">
-                        {i + 1}
-                      </span>
-                      <span className="text-muted-foreground leading-relaxed">{rule}</span>
-                    </li>
-                  ))}
-                </ul>
-              </ScrollArea>
             </div>
           </div>
 
-          <div className="w-full md:w-80 space-y-6">
-            <div className="bg-card p-6 rounded-2xl border shadow-lg sticky top-24">
-              <h3 className="text-lg font-bold mb-4">Session Status</h3>
-              {details?.isEnded ? (
-                <div className="text-center space-y-4">
-                  <div className="p-4 bg-red-500/10 rounded-xl border border-red-500/20">
-                    <p className="text-xs font-bold text-red-600 uppercase text-center">Test Ended</p>
-                  </div>
-                  <Button disabled className="w-full py-6 text-lg font-bold opacity-80 cursor-not-allowed bg-muted text-muted-foreground">
-                    Access Closed
-                  </Button>
-                  <p className="text-[10px] text-muted-foreground">This assessment is no longer accepting submissions.</p>
-                </div>
-              ) : !details?.canStart ? (
-                <div className="text-center space-y-4">
-                  <div className="p-4 bg-muted rounded-xl">
-                    <p className="text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Starting In</p>
-                    <p className="text-3xl font-mono font-bold text-primary tabular-nums">{timeLeft}</p>
-                  </div>
-                  <Button disabled className="w-full py-6 text-lg font-bold opacity-80 cursor-not-allowed">
-                    Entry Locked
-                  </Button>
-                  <p className="text-[10px] text-muted-foreground">The assessment will unlock automatically when the timer reaches zero.</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="p-4 bg-green-500/10 rounded-xl border border-green-500/20">
-                    <p className="text-xs font-bold text-green-600 dark:text-green-400 uppercase text-center">Test is Live</p>
-                  </div>
-                  <Button onClick={handleStartClick} className="w-full py-6 text-lg font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform">
-                    Start Assessment
-                  </Button>
-                  <p className="text-[10px] text-center text-muted-foreground italic">By starting, you agree to follow the test rules.</p>
-                </div>
-              )}
+          {/* Guidelines Section */}
+          <div className="space-y-8 pt-8 border-t border-border/30 max-w-3xl">
+            <h2 className="text-2xl font-semibold tracking-tight flex items-center gap-3">
+              <AlertCircle className="h-6 w-6 text-muted-foreground" />
+              Guidelines
+            </h2>
+            <ul className="space-y-5">
+              {details?.rules?.map((rule, i) => (
+                <li key={i} className="flex items-start gap-5 text-muted-foreground">
+                  <span className="flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-full bg-muted text-xs font-bold text-foreground">
+                    {i + 1}
+                  </span>
+                  <span className="leading-relaxed pt-0.5">{rule}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* Right Solid Sidebar */}
+        <div className="w-full lg:w-[400px] xl:w-[480px] bg-zinc-50 dark:bg-zinc-900/50 border-t lg:border-t-0 lg:border-l border-border/50 px-6 md:px-16 lg:px-16 py-12 lg:py-36 flex flex-col">
+          <div className="sticky top-32 space-y-10">
+            <div>
+              <h3 className="font-semibold text-2xl tracking-tight mb-3">Assessment Entry</h3>
+              <p className="text-muted-foreground text-sm leading-relaxed">Review the guidelines carefully. When you are ready, you may begin the test.</p>
             </div>
+
+            {details?.isEnded ? (
+              <div className="space-y-6">
+                <div className="inline-flex items-center gap-2 text-sm font-medium text-destructive">
+                  <span className="w-2 h-2 rounded-full bg-destructive"></span>
+                  Test Ended
+                </div>
+                <Button disabled className="w-full h-14 text-md rounded-full shadow-sm" variant="outline">Access Closed</Button>
+                <p className="text-xs text-muted-foreground text-center">This assessment is no longer accepting submissions.</p>
+              </div>
+            ) : !details?.canStart ? (
+              <div className="space-y-6">
+                <div className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <span className="w-2 h-2 rounded-full bg-muted-foreground"></span>
+                  Starting In
+                </div>
+                <p className="text-5xl font-mono font-light tracking-tight text-foreground">{timeLeft}</p>
+                <Button disabled className="w-full h-14 text-md rounded-full shadow-sm" variant="outline">Entry Locked</Button>
+                <p className="text-xs text-muted-foreground text-center">The assessment will unlock automatically.</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div className="inline-flex items-center gap-2 text-sm font-medium text-green-600 dark:text-green-500">
+                  <span className="w-2 h-2 rounded-full bg-green-600 dark:bg-green-500 animate-pulse"></span>
+                  Test is Live
+                </div>
+                <Button onClick={handleStartClick} className="w-full h-14 text-md rounded-full transition-all hover:bg-primary/90 shadow-md" size="lg">
+                  Start Assessment
+                </Button>
+                <p className="text-xs text-muted-foreground text-center">By starting, you agree to follow the rules.</p>
+              </div>
+            )}
           </div>
         </div>
       </main>
