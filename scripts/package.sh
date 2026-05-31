@@ -153,6 +153,9 @@ cp -r client/.next/standalone  "$PKG_DIR/client/.next/standalone"
 cp -r client/.next/static      "$PKG_DIR/client/.next/static"
 cp -r client/public             "$PKG_DIR/client/public"
 cp client/Dockerfile            "$PKG_DIR/client/"
+# Next.js standalone copies local .env files; remove them to prevent dev leaks
+rm -f "$PKG_DIR/client/.next/standalone/.env"*
+rm -f "$PKG_DIR/client/.next/standalone/client/.env"*
 
 # --- Docker Compose files ---
 mkdir -p "$PKG_DIR/docker/app"
@@ -167,7 +170,6 @@ cp config/caddy/Caddyfile      "$PKG_DIR/config/caddy/"
 cp config/judge0/judge0.conf   "$PKG_DIR/config/judge0/"
 
 # --- Root-level files ---
-cp .env.example   "$PKG_DIR/"
 cp .dockerignore  "$PKG_DIR/"
 
 log_success "Files staged."

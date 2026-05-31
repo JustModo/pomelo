@@ -2,7 +2,12 @@ import { auth } from "@/auth";
 import { getBaseUrl } from "@/lib/env";
 
 export async function fetchBackend(endpoint: string, options: RequestInit = {}) {
-  const session = await auth();
+  let session = null;
+  try {
+    session = await auth();
+  } catch (error) {
+    console.error("Auth session error:", error);
+  }
   const token = session?.backendToken;
 
   const headers = new Headers(options.headers);

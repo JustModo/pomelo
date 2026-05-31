@@ -1,6 +1,7 @@
 "use server";
 
 import { fetchBackend } from "@/lib/fetch";
+
 export async function joinTest(joinId: string) {
   return fetchBackend("/api/test/join", {
     method: "POST",

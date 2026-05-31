@@ -33,7 +33,7 @@ app.use(
 app.use(express.json());
 
 app.get("/", (req, res) => {
-  res.send("SOSCEvMan API is running...");
+  res.send("Pomelo API online");
 });
 
 // Routes

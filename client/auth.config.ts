@@ -36,6 +36,12 @@ async function mintBackendToken(user: User) {
 
 export const authConfig = {
     secret: process.env.AUTH_SECRET,
+    logger: {
+        error(error: any) {
+            if (error?.name === 'CredentialsSignin') return;
+            console.error(error);
+        }
+    },
     pages: {
         signIn: '/auth/login',
     },

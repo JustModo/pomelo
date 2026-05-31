@@ -69,7 +69,7 @@ async function handleApi(req, url, method) {
     }
 
     if (method === "POST" && url.pathname === "/api/start") {
-      return streamComposeResponse("start", ["up", "-d"]);
+      return streamComposeResponse("start", ["up", "-d", "--build"]);
     }
 
     if (method === "POST" && url.pathname === "/api/stop") {
@@ -77,7 +77,7 @@ async function handleApi(req, url, method) {
     }
 
     if (method === "POST" && url.pathname === "/api/restart") {
-      return streamComposeResponse("restart", ["up", "-d"]);
+      return streamComposeResponse("restart", ["up", "-d", "--build"]);
     }
 
     if (method === "GET" && url.pathname === "/api/logs") {
@@ -660,8 +660,6 @@ function defaultCaddyfile() {
     "",
     "{$CADDY_SITE_ADDRESS:http://localhost:80} {",
     "  encode zstd gzip",
-    "  @api path /api/*",
-    "  reverse_proxy @api server:8080",
     "  reverse_proxy client:3000",
     "}",
     "",

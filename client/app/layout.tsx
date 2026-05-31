@@ -6,9 +6,8 @@ import { SessionProvider } from "@/components/session-provider";
 import { Toaster } from "sonner";
 
 const domain = process.env.DOMAIN || "localhost:3000";
-const rawProtocol = process.env.PROTOCOL || "http";
-const resolvedProtocol = rawProtocol === "both" ? "https" : rawProtocol;
-const clientUrl = `${resolvedProtocol}://${domain}`;
+const protocol = process.env.PROTOCOL || "http";
+const clientUrl = `${protocol}://${domain}`;
 
 export const metadata: Metadata = {
   title: {

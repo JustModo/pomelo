@@ -63,7 +63,7 @@ services:
       dockerfile: server/Dockerfile.dev
     command: node scripts/seed.js
     environment:
-      - MONGODB_URI=${MONGODB_URI}
+      - MONGODB_URI=mongodb://mongo:27017/pomelo
     depends_on:
       mongo:
         condition: service_healthy

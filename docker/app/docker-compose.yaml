@@ -38,6 +38,7 @@ services:
       - NODE_ENV=production
       - AUTH_SECRET=${AUTH_SECRET}
       - AUTH_TRUST_HOST=true
+      - AUTH_URL=${PROTOCOL:-http}://${DOMAIN}
       - DOMAIN=${DOMAIN}
       - PROTOCOL=${PROTOCOL:-http}
     depends_on:
@@ -61,10 +62,7 @@ services:
       - server
     entrypoint: >
       sh -c "
-        if [ \"$$PROTOCOL\" = 'both' ]; then
-          export CADDY_SITE_ADDRESS=\"http://$$DOMAIN, https://$$DOMAIN\"
-          export CADDY_AUTO_HTTPS=\"on\"
-        elif [ \"$$PROTOCOL\" = 'https' ]; then
+        if [ \"$$PROTOCOL\" = 'https' ]; then
           export CADDY_SITE_ADDRESS=\"https://$$DOMAIN\"
           export CADDY_AUTO_HTTPS=\"on\"
         else
