@@ -33,7 +33,7 @@ export function TestsList({ initialTests }: Props) {
   const [searchTerm, setSearchTerm] = useState("");
 
   // Map mongo objects to the shape TestCard expects.
-  const tests = initialTests.map(t => {
+  const tests = [...initialTests].reverse().map(t => {
     const start = t.startTime ? new Date(t.startTime).getTime() : 0;
     const end = t.endTime ? new Date(t.endTime).getTime() : 0;
     const durationMs = end - start;

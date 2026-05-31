@@ -72,10 +72,6 @@ export default function MCQScreen({ problem, problems }: MCQScreenProps) {
   const handleNext = () => {
     if (nextProblem) {
       router.push(`/attempt/test/${params.testid}/question/${nextProblem.id}`);
-    } else {
-      // If "Finish", we can trigger the global submit if desired, 
-      // but usually the Submit button in Header handles final endTest.
-      toast.success("All questions completed! Click Submit to finish the test.");
     }
   };
 
@@ -208,6 +204,7 @@ export default function MCQScreen({ problem, problems }: MCQScreenProps) {
           <Button
             className="px-6 font-medium"
             onClick={handleNext}
+            disabled={!nextProblem}
           >
             {nextProblem ? "Next" : "Finish"}
           </Button>

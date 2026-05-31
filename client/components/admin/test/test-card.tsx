@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCloneTest } from "@/hooks/use-clone-test";
 import {
   Card,
   CardContent,
@@ -12,7 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Clock, Trash2, Copy, Loader2 } from "lucide-react";
+import { Clock, Loader2, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Test } from "@/types/test";
 import { format } from "date-fns";
@@ -23,7 +22,6 @@ import { deleteTestAction } from "@/actions/delete-test";
 export function TestCard({ test }: { test: Test }) {
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
-  const { isCloning, handleClone } = useCloneTest(test.id as string);
   const statusLabel = getTestStatusLabel(test.status);
   const statusVariant = getTestStatusBadgeVariant(test.status);
 
@@ -32,11 +30,11 @@ export function TestCard({ test }: { test: Test }) {
       <CardHeader>
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-lg sm:text-xl text-foreground font-semibold truncate">
-              {test.title}
+            <CardTitle className="text-lg sm:text-xl text-foreground font-semibold truncate block w-full" title={test.title}>
+              {test.title.length > 35 ? test.title.substring(0, 35) + "..." : test.title}
             </CardTitle>
-            <CardDescription className="text-muted-foreground mt-1 text-sm leading-relaxed line-clamp-2">
-              {test.description}
+            <CardDescription className="text-muted-foreground mt-2 text-sm leading-relaxed break-words line-clamp-2 h-[44px]" title={test.description}>
+              {test.description.length > 100 ? test.description.substring(0, 100) + "..." : test.description}
             </CardDescription>
           </div>
           <Badge
@@ -146,21 +144,6 @@ export function TestCard({ test }: { test: Test }) {
               </Button>
             )}
           </div>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-foreground hover:bg-muted shrink-0"
-            disabled={isCloning}
-            title="Clone Test"
-            onClick={async (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              await handleClone();
-            }}
-          >
-            {isCloning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Copy className="h-4 w-4" />}
-          </Button>
 
           <Button
             variant="ghost"

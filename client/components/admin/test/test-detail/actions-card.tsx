@@ -112,13 +112,6 @@ export function QuickActionsCard({ test }: QuickActionsCardProps) {
               </span>
             </Button>
           )}
-
-          <Link href={`/test/${testId}`}>
-            <Button className="w-full h-16 flex flex-col items-center justify-center gap-2">
-              <Play className="h-5 w-5" />
-              <span className="text-xs font-medium text-center">Take Test</span>
-            </Button>
-          </Link>
         </div>
       </CardContent>
     </Card>

@@ -48,6 +48,10 @@ export function useTestCompletion() {
 
       clearAttemptIntegrityState(testId);
 
+      if (document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(err => console.error("Error exiting fullscreen:", err));
+      }
+
       toast.success(
         options.successMessage ||
         (options.forced ? "Test auto-submitted after repeated violations." : "Test submitted successfully!")

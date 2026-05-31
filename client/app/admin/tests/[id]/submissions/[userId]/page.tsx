@@ -123,7 +123,7 @@ function mapSubmissionDetail(submissionItem: RawSubmissionItem): SubmissionDetai
 
     if (isMCQQuestion(question)) {
         const options = (question.options || []).map((option, index) => ({
-            id: String.fromCharCode(97 + index),
+            id: String(index),
             text: option,
         }));
 
