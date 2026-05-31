@@ -24,7 +24,6 @@ export default function MCQScreen({ problem, problems }: MCQScreenProps) {
   const router = useRouter();
   const params = useParams();
   const [isSaving, setIsSaving] = useState(false);
-  const { data: session } = useSession();
 
   // Create sorting logic matching TestHeader: MCQs first, then Coding
   const mcqProblems = problems.filter((p) => p.questionType !== "Coding");

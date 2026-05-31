@@ -7,8 +7,6 @@ x-logging: &default-logging
 services:
   judge0-server:
     image: officialsosc/judge0:latest
-    ports:
-      - "2358:2358"
     volumes:
       - /opt/pomelo/config/judge0.conf:/judge0.conf:ro
     env_file:

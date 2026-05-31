@@ -126,6 +126,16 @@ if [[ "$ACTION" == "uninstall" ]]; then
     log_success "CLI symlink removed."
   fi
 
+  # Teardown Docker containers
+  if command -v docker &>/dev/null && [[ -f "$APP_ROOT/app/docker/app/docker-compose.yaml" ]]; then
+    log_info "Stopping Docker containers and removing ephemeral volumes..."
+    docker compose --project-name pomelo \
+      -f "$APP_ROOT/app/docker/app/docker-compose.yaml" \
+      -f "$APP_ROOT/app/docker/judge0/docker-compose.yaml" \
+      down -v >/dev/null 2>&1 || true
+    log_success "Docker containers and ephemeral volumes removed."
+  fi
+
   # Remove app directory
   if [[ -d "$APP_ROOT/app" ]]; then
     rm -rf "$APP_ROOT/app"
@@ -141,6 +151,8 @@ if [[ "$ACTION" == "uninstall" ]]; then
   echo ""
   prompt "Also remove data and config? (database, uploads, configs) [y/N]:"
   read -r remove_data
+
+
   if [[ "$remove_data" == "y" || "$remove_data" == "Y" ]]; then
     rm -rf "$APP_ROOT/data" "$APP_ROOT/config"
     log_success "Data and config removed."

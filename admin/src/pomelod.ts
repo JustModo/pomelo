@@ -702,7 +702,7 @@ function streamUninstall(mode = "default") {
         if (currentDir && existsSync(currentDir)) {
           controller.enqueue(encoder.encode("Stopping Docker services...\n"));
           const proc = Bun.spawn({
-            cmd: ["docker", ...composeArgs(currentDir, ["down"])],
+            cmd: ["docker", ...composeArgs(currentDir, ["down", "-v"])],
             cwd: currentDir,
             stdout: "pipe",
             stderr: "pipe",

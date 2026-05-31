@@ -2,7 +2,6 @@ const mongoose = require('mongoose');
 let isCon = false;
 const connectDB = async () => {
   if (isCon) {
-    console.log('Connection Exists');
     return;
   }
   try {
