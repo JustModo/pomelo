@@ -23,11 +23,9 @@ connectDB();
 // const initCron = require("./services/cron");
 // initCron();
 
-const corsOrigin = process.env.NEXT_PUBLIC_CLIENT_URL || "http://localhost:3000";
-
 app.use(
   cors({
-    origin: corsOrigin,
+    origin: (origin, callback) => callback(null, true),
     credentials: true,
   })
 );

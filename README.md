@@ -35,7 +35,7 @@ A simple contest platform with a Next.js frontend (`client`), an Express backend
 3. Start Judge0 + Mongo (from repository root):
 
    ```bash
-   docker compose --project-name pomelo --env-file .env -f docker/app/docker-compose.dev.yaml -f docker/judge0/docker-compose.yaml --project-directory . up mongo judge0-server judge0-workers seed -d
+   docker compose --project-name pomelo --env-file .env -f docker/app/docker-compose.dev.yaml -f docker/judge0/docker-compose.dev.yaml --project-directory . up mongo judge0-server judge0-workers seed -d
    ```
 
 4. Install dependencies and run the app (from repository root):

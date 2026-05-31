@@ -7,7 +7,7 @@ services:
     volumes:
       - mongo-data:/data/db
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -24,6 +24,8 @@ services:
       - PORT=${PORT}
       - AUTH_SECRET=${AUTH_SECRET}
       - JUDGE0_URL=${JUDGE0_URL}
+      - DOMAIN=${DOMAIN:-localhost:3000}
+      - PROTOCOL=${PROTOCOL:-http}
     depends_on:
       mongo:
         condition: service_healthy
@@ -42,7 +44,9 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
+      - BACKEND_URL=${BACKEND_URL}
+      - DOMAIN=${DOMAIN:-localhost:3000}
+      - PROTOCOL=${PROTOCOL:-http}
       - AUTH_SECRET=${AUTH_SECRET}
     develop:
       watch:
