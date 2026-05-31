@@ -11,6 +11,8 @@ import {
 } from "fs";
 import { join } from "path";
 import { fileURLToPath } from "url";
+import { MongoClient, ObjectId } from "mongodb";
+import bcrypt from "bcryptjs";
 
 const args = parseArgs(Bun.argv.slice(2));
 if (args.root) process.env.POMELO_ROOT = args.root;
@@ -104,6 +106,29 @@ async function handleApi(req, url, method) {
 
     if (method === "GET" && url.pathname === "/api/storage") {
       return json({ status: "ok", data: await getStorageUsage() });
+    }
+
+    // User management routes
+    if (method === "GET" && url.pathname === "/api/users") {
+      return json({ status: "ok", data: await listUsers() });
+    }
+
+    if (method === "POST" && url.pathname === "/api/users") {
+      const body = await readJson(req);
+      return json({ status: "ok", data: await createUser(body) }, 201);
+    }
+
+    const userMatch = url.pathname.match(/^\/api\/users\/([a-f0-9]{24})$/);
+    if (userMatch) {
+      const userId = userMatch[1];
+      if (method === "PUT") {
+        const body = await readJson(req);
+        return json({ status: "ok", data: await updateUser(userId, body) });
+      }
+      if (method === "DELETE") {
+        await deleteUser(userId);
+        return json({ status: "ok", data: { deleted: true } });
+      }
     }
 
     return errorResponse("Not found", 1, 404);
@@ -229,7 +254,7 @@ function getPaths() {
   const tmpDir = join(runtimeDir, "tmp");
   const uiDistDir = join(root, "app", "admin", "dist");
   const envFile = join(configDir, "app.env");
-  const configFile = join(configDir, "config.json");
+  const configFile = join(configDir, "config.yaml");
   const caddyFile = join(configDir, "Caddyfile");
   const judge0File = join(configDir, "judge0.conf");
   return {
@@ -360,38 +385,48 @@ async function streamComposeResponse(operation: string, composeExtraArgs: string
     env: process.env,
   });
 
+  proc.exited.finally(() => {
+    currentOperation = { status: "idle" };
+  });
+
   const encoder = new TextEncoder();
-  let stdoutDone = false;
-  let stderrDone = false;
 
   const stream = new ReadableStream({
-    start(controller) {
-      const tryClose = (exitCode: number) => {
-        if (stdoutDone && stderrDone) {
-          currentOperation = { status: "idle" };
-          controller.enqueue(encoder.encode(`\n[POMELO_EXIT:${exitCode}]\n`));
-          controller.close();
+    async start(controller) {
+      let isClosed = false;
+      const safeEnqueue = (chunk: any) => {
+        if (!isClosed) {
+          try { controller.enqueue(chunk); } catch {}
         }
       };
 
-      proc.stdout.pipeTo(new WritableStream({
-        write(chunk) { controller.enqueue(chunk); },
-        close() { stdoutDone = true; },
-      }));
-      proc.stderr.pipeTo(new WritableStream({
-        write(chunk) { controller.enqueue(chunk); },
-        close() { stderrDone = true; },
-      }));
+      const pOut = proc.stdout.pipeTo(new WritableStream({
+        write(chunk) { safeEnqueue(chunk); }
+      })).catch(() => {});
 
-      proc.exited.then((exitCode) => {
-        // Wait briefly for pipes to flush
-        setTimeout(() => {
-          stdoutDone = true;
-          stderrDone = true;
-          tryClose(exitCode);
-        }, 100);
-      });
+      const pErr = proc.stderr.pipeTo(new WritableStream({
+        write(chunk) { safeEnqueue(chunk); }
+      })).catch(() => {});
+
+      const exitCode = await proc.exited;
+      
+      // Wait for output streams to flush fully, but fallback to a 3s timeout
+      // in case docker-compose leaves file descriptors hanging open.
+      await Promise.race([
+        Promise.all([pOut, pErr]),
+        new Promise(r => setTimeout(r, 3000))
+      ]);
+
+      if (!isClosed) {
+        isClosed = true;
+        try { controller.enqueue(encoder.encode(`\n[POMELO_EXIT:${exitCode}]\n`)); } catch {}
+        try { controller.close(); } catch {}
+      }
     },
+    cancel() {
+      // Do not kill the process if the client disconnects.
+      // Let the compose operation run to completion in the background.
+    }
   });
 
   return new Response(stream, {
@@ -513,18 +548,18 @@ function tailFile(path, lines) {
 
 function getConfigSnapshot() {
   const appEnv = existsSync(paths.envFile) ? readFileSync(paths.envFile, "utf8") : "";
-  const configJson = readJsonFile(paths.configFile) ?? {};
+  const configYaml = existsSync(paths.configFile) ? readFileSync(paths.configFile, "utf8") : "";
   const caddyfile = existsSync(paths.caddyFile) ? readFileSync(paths.caddyFile, "utf8") : "";
   const judge0 = existsSync(paths.judge0File) ? readFileSync(paths.judge0File, "utf8") : "";
-  return { appEnv, configJson, caddyfile, judge0 };
+  return { appEnv, configYaml, caddyfile, judge0 };
 }
 
 function updateConfig(payload) {
   if (typeof payload.appEnv === "string") {
     writeFileSync(paths.envFile, payload.appEnv);
   }
-  if (payload.configJson && typeof payload.configJson === "object") {
-    writeFileSync(paths.configFile, JSON.stringify(payload.configJson, null, 2));
+  if (typeof payload.configYaml === "string") {
+    writeFileSync(paths.configFile, payload.configYaml);
   }
   if (typeof payload.caddyfile === "string") {
     writeFileSync(paths.caddyFile, payload.caddyfile);
@@ -595,7 +630,7 @@ function ensureConfigDefaults(releaseDir) {
   }
 
   if (!existsSync(paths.configFile)) {
-    writeFileSync(paths.configFile, "{}\n");
+    writeFileSync(paths.configFile, "# Pomelo Configuration\n");
   }
 
   if (!existsSync(paths.caddyFile)) {
@@ -655,10 +690,10 @@ function upsertEnv(text, key, value) {
 function defaultCaddyfile() {
   return [
     "{",
-    "  auto_https {$CADDY_AUTO_HTTPS:off}",
+    "  auto_https off",
     "}",
     "",
-    "{$CADDY_SITE_ADDRESS:http://localhost:80} {",
+    "http://localhost:80 {",
     "  encode zstd gzip",
     "  reverse_proxy client:3000",
     "}",
@@ -787,3 +822,100 @@ async function finishUninstall(controller: any, mode: string, encoder: any) {
   controller.enqueue(encoder.encode("[POMELO_EXIT:0]\n"));
   controller.close();
 }
+
+// ── User Management ──────────────────────────────────────────────────────────
+
+let mongoClient: MongoClient | null = null;
+
+function getMongoUri(): string {
+  if (existsSync(paths.envFile)) {
+    const env = parseEnv(readFileSync(paths.envFile, "utf8"));
+    if (env.MONGODB_URI) return env.MONGODB_URI;
+  }
+  return "mongodb://mongo:27017/pomelo";
+}
+
+async function getDb() {
+  const uri = getMongoUri();
+  if (!mongoClient) {
+    mongoClient = new MongoClient(uri);
+    await mongoClient.connect();
+  }
+  return mongoClient.db();
+}
+
+async function listUsers() {
+  const db = await getDb();
+  const users = await db.collection("users").find({}, {
+    projection: { passwordHash: 0 },
+  }).sort({ createdAt: -1 }).toArray();
+  return users;
+}
+
+async function createUser(body: any) {
+  const { name, email, password, role } = body;
+  if (!email || !password) {
+    throw createError("Email and password are required", 1);
+  }
+
+  const db = await getDb();
+  const existing = await db.collection("users").findOne({ email });
+  if (existing) {
+    throw createError("User with this email already exists", 1);
+  }
+
+  const passwordHash = await bcrypt.hash(password, 10);
+  const now = new Date();
+  const doc = {
+    email,
+    passwordHash,
+    name: name || "",
+    role: role === "admin" ? "admin" : "user",
+    registeredContests: [],
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  const result = await db.collection("users").insertOne(doc);
+  return {
+    _id: result.insertedId.toString(),
+    email: doc.email,
+    name: doc.name,
+    role: doc.role,
+    createdAt: doc.createdAt.toISOString(),
+    updatedAt: doc.updatedAt.toISOString(),
+  };
+}
+
+async function updateUser(id: string, body: any) {
+  const db = await getDb();
+  const update: Record<string, any> = { updatedAt: new Date() };
+
+  if (body.name !== undefined) update.name = body.name;
+  if (body.email !== undefined) update.email = body.email;
+  if (body.role !== undefined) update.role = body.role;
+  if (body.password) {
+    update.passwordHash = await bcrypt.hash(body.password, 10);
+  }
+
+  const result = await db.collection("users").findOneAndUpdate(
+    { _id: new ObjectId(id) },
+    { $set: update },
+    { returnDocument: "after", projection: { passwordHash: 0 } },
+  );
+
+  if (!result) {
+    throw createError("User not found", 1);
+  }
+
+  return result;
+}
+
+async function deleteUser(id: string) {
+  const db = await getDb();
+  const result = await db.collection("users").deleteOne({ _id: new ObjectId(id) });
+  if (result.deletedCount === 0) {
+    throw createError("User not found", 1);
+  }
+}
+

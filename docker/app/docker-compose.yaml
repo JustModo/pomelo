@@ -51,23 +51,9 @@ services:
     ports:
       - "80:80"
       - "443:443"
-    environment:
-      - DOMAIN=${DOMAIN}
-      - PROTOCOL=${PROTOCOL:-http}
     volumes:
       - /opt/pomelo/config/Caddyfile:/etc/caddy/Caddyfile:ro
       - /opt/pomelo/runtime/logs:/var/log/caddy
     depends_on:
       - client
       - server
-    entrypoint: >
-      sh -c "
-        if [ \"$$PROTOCOL\" = 'https' ]; then
-          export CADDY_SITE_ADDRESS=\"https://$$DOMAIN\"
-          export CADDY_AUTO_HTTPS=\"on\"
-        else
-          export CADDY_SITE_ADDRESS=\"http://$$DOMAIN:80\"
-          export CADDY_AUTO_HTTPS=\"off\"
-        fi
-        exec caddy run --config /etc/caddy/Caddyfile --adapter caddyfile
-      "

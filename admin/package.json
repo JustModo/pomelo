@@ -12,12 +12,24 @@
     "clean": "rm -rf bin dist node_modules"
   },
   "dependencies": {
+    "@radix-ui/react-select": "^2.2.6",
+    "bcryptjs": "^3.0.2",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.511.0",
+    "mongodb": "^6.16.0",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "react-router-dom": "^7.6.1",
+    "sonner": "^2.0.3",
+    "tailwind-merge": "^3.3.0"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.1.8",
+    "@types/bcryptjs": "^3.0.0",
     "@types/bun": "^1.3.14",
     "@vitejs/plugin-react": "^4.3.0",
+    "tailwindcss": "^4.1.8",
     "typescript": "^6.0.3",
     "vite": "^6.0.0"
   }

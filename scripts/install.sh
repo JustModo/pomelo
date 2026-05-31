@@ -475,8 +475,8 @@ else
   log_info "Existing config preserved at ${DIM}$APP_ROOT/config/app.env${NC}"
 fi
 
-if [[ ! -s "$APP_ROOT/config/config.json" ]]; then
-  echo '{}' > "$APP_ROOT/config/config.json"
+if [[ ! -s "$APP_ROOT/config/config.yaml" ]]; then
+  echo '# Pomelo Configuration' > "$APP_ROOT/config/config.yaml"
 fi
 
 # Copy default Caddyfile if not present

@@ -1,8 +1,8 @@
 {
-	auto_https {$CADDY_AUTO_HTTPS:off}
+	auto_https off
 }
 
-{$CADDY_SITE_ADDRESS:http://localhost:80} {
+http://localhost:80 {
 	encode zstd gzip
 	log {
 		output file /var/log/caddy/access.log
