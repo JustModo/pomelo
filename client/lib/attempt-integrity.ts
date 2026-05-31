@@ -23,7 +23,9 @@ export function readViolationCount(testId: string) {
 
 export function persistViolationCount(testId: string, count: number) {
   if (!isBrowser()) return;
-  window.localStorage.setItem(getViolationStorageKey(testId), String(Math.max(0, count)));
+  const safeCount = Math.max(0, count);
+  window.localStorage.setItem(getViolationStorageKey(testId), String(safeCount));
+  window.dispatchEvent(new CustomEvent("pomelo-violation-update", { detail: { count: safeCount } }));
 }
 
 export function obfuscateAttemptBody() {
