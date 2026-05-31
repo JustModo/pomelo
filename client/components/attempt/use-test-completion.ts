@@ -8,7 +8,8 @@ import {
   AUTO_SUBMIT_REASON,
   clearAttemptIntegrityState,
 } from "@/lib/attempt-integrity";
-import { getBaseUrl } from "@/lib/env";
+
+import { endTest } from "@/actions/contest";
 
 interface CompleteTestOptions {
   forced?: boolean;
@@ -36,25 +37,12 @@ export function useTestCompletion() {
     setIsSubmitting(true);
 
     try {
-      const res = await fetch(`${getBaseUrl()}/api/test/${testId}/end`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${session.backendToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          contestId: testId,
-          forcedSubmission: Boolean(options.forced),
-          autoSubmitReason: options.forced
-            ? options.autoSubmitReason ?? AUTO_SUBMIT_REASON
-            : undefined,
-        }),
-      });
+      const forced = Boolean(options.forced);
+      const autoReason = options.forced ? options.autoSubmitReason ?? AUTO_SUBMIT_REASON : undefined;
+      const data = await endTest(testId, forced, autoReason);
 
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        toast.error(data.error || options.errorMessage || "Failed to submit test");
+      if (!data.success) {
+        toast.error(data.error || data.message || options.errorMessage || "Failed to submit test");
         return { success: false as const, data };
       }
 
@@ -62,7 +50,7 @@ export function useTestCompletion() {
 
       toast.success(
         options.successMessage ||
-          (options.forced ? "Test auto-submitted after repeated violations." : "Test submitted successfully!")
+        (options.forced ? "Test auto-submitted after repeated violations." : "Test submitted successfully!")
       );
 
       const destination = options.redirectTo ?? (options.forced ? "/" : `/test/${testId}`);
@@ -78,7 +66,7 @@ export function useTestCompletion() {
     } catch {
       toast.error(
         options.errorMessage ||
-          (options.forced ? "Auto submission failed. Please retry." : "Network error finishing test")
+        (options.forced ? "Auto submission failed. Please retry." : "Network error finishing test")
       );
       return { success: false as const };
     } finally {

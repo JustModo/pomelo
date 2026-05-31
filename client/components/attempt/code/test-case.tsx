@@ -11,7 +11,8 @@ import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { CodingProblem } from "@/types/problem";
-import { getBaseUrl } from "@/lib/env";
+
+import { runCode, submitCode } from "@/actions/contest";
 
 interface TestCaseResult {
   testCase: number;
@@ -40,57 +41,36 @@ export default function TestCasePanel({
   const [results, setResults] = useState<TestCaseResult[]>([]);
 
   const handleRun = async () => {
-    if (!session?.backendToken) return toast.error("Please login first");
+    if (!testid) return toast.error("Test ID missing");
     setIsRunning(true);
     setView("sample");
     try {
-      const res = await fetch(`${getBaseUrl()}/api/test/${testid}/run`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${session.backendToken}`
-        },
-        body: JSON.stringify({
-          questionId: problem.id,
-          code,
-          language
-        })
-      });
-      const data = await res.json();
+      const data = await runCode(testid as string, String(problem.id), code, language);
       if (data.success) {
         setResults(data.results);
       } else {
+        toast.error(data.error || data.message || "Failed to run code");
       }
     } catch {
+      toast.error("Network error");
     } finally {
       setIsRunning(false);
     }
   };
 
   const handleSubmit = async () => {
-    if (!session?.backendToken) return toast.error("Please login first");
+    if (!testid) return toast.error("Test ID missing");
     setIsRunning(true);
     setView("hidden");
     try {
-      const res = await fetch(`${getBaseUrl()}/api/test/${testid}/submit`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${session.backendToken}`
-        },
-        body: JSON.stringify({
-          contestId: testid,
-          questionId: problem.id,
-          code,
-          language
-        })
-      });
-      const data = await res.json();
+      const data = await submitCode(testid as string, String(problem.id), code, language);
       if (data.success) {
         setResults(data.results);
       } else {
+        toast.error(data.error || data.message || "Failed to submit code");
       }
     } catch {
+      toast.error("Network error");
     } finally {
       setIsRunning(false);
     }

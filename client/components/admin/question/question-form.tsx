@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, Fragment, useActionState, useTransition, useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { QuestionSchema, questionSchema } from "@/types/problem";
-import { saveQuestion } from "@/app/actions/save-question";
+import { saveQuestion } from "@/actions/save-question";
 
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
@@ -140,12 +140,12 @@ export default function QuestionForm({ type, isCreating, initialData }: Props) {
           output: tc.output as string,
           isVisible: tc.isVisible as boolean ?? false,
         }));
-        
+
         startTransition(() => {
           formAction(submissionData as QuestionSchema);
         });
       } catch (error) {
-         console.error("Serialization failed", error);
+        console.error("Serialization failed", error);
       }
     } else {
       startTransition(() => {

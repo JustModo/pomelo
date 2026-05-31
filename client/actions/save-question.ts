@@ -2,17 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { questionSchema, type QuestionSchema } from "@/types/problem";
-import { auth } from "@/auth";import { getBaseUrl } from "@/lib/env";
+import { fetchBackend } from "@/lib/fetch";
 
 
 export async function saveQuestion(_prevState: Record<string, unknown>, data: QuestionSchema) {
   try {
     const validatedData = questionSchema.parse(data);
-    const session = await auth();
-    const token = session?.backendToken;
-
-
-
+    
     // Transform to backend schema
     const payload = {
       title: validatedData.title,
@@ -40,29 +36,23 @@ export async function saveQuestion(_prevState: Record<string, unknown>, data: Qu
     // Determine URL and Method
     const isUpdate = !!validatedData.id;
     const url = isUpdate
-      ? `${getBaseUrl()}/api/admin/questions/${validatedData.id}/edit`
-      : `${getBaseUrl()}/api/admin/questions/create`;
+      ? `/api/admin/questions/${validatedData.id}/edit`
+      : `/api/admin/questions/create`;
     const method = isUpdate ? "PUT" : "POST";
 
-    const res = await fetch(url, {
+    const json = await fetchBackend(url, {
       method: method,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
       body: JSON.stringify(payload),
     });
 
-    const json = await res.json();
-
-    if (!res.ok || !json.success) {
-      throw new Error(json.error || `Failed to ${isUpdate ? 'update' : 'save'} question`);
+    if (!json.success) {
+      throw new Error(json.error || json.message || `Failed to ${isUpdate ? 'update' : 'save'} question`);
     }
 
     revalidatePath("/admin/questions");
     return {
       success: true,
-      message: "Question added! Full data saved to data/questions.json and stats updated.",
+      message: `Question ${isUpdate ? "updated" : "added"} successfully!`,
     };
   } catch (error) {
     console.error("Error saving question:", error);

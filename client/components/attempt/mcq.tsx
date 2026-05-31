@@ -11,7 +11,8 @@ import { Problem, MCQProblem } from "@/types/problem";
 import { useRouter, useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { getBaseUrl } from "@/lib/env";
+
+import { submitMcq } from "@/actions/contest";
 
 interface MCQScreenProps {
   problem: MCQProblem;
@@ -35,22 +36,10 @@ export default function MCQScreen({ problem, problems }: MCQScreenProps) {
   const nextProblem = sortedProblems[currentIndex + 1];
 
   const handleSave = async (answers: string[]) => {
-    if (!session?.backendToken || !params.testid) return;
+    if (!params.testid) return;
     setIsSaving(true);
     try {
-      const res = await fetch(`${getBaseUrl()}/api/test/${params.testid}/mcq`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${session.backendToken}`
-        },
-        body: JSON.stringify({
-          contestId: params.testid,
-          questionId: problem._id || problem.id,
-          answer: answers
-        })
-      });
-      const data = await res.json();
+      const data = await submitMcq(params.testid as string, String(problem._id || problem.id), answers);
       if (!data.success) {
         toast.error(data.error || "Failed to save answer");
       }

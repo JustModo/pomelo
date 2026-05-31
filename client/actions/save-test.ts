@@ -1,9 +1,8 @@
 "use server";
 
 import { testSchema, TestSchema } from "@/types/test";
-import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
-import { getBaseUrl } from "@/lib/env";
+import { fetchBackend } from "@/lib/fetch";
 
 function parseDuration(duration: string) {
   const match = duration.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
@@ -34,11 +33,6 @@ function parseDuration(duration: string) {
 export async function saveTest(_prevState: Record<string, unknown>, data: TestSchema) {
   try {
     const validatedData = testSchema.parse(data);
-    const session = await auth();
-    const token = session?.backendToken;
-
-
-
     const { hours, minutes, seconds } = parseDuration(String(validatedData.duration));
     const startDate = new Date(validatedData.startsAt);
     const now = new Date();
@@ -68,26 +62,19 @@ export async function saveTest(_prevState: Record<string, unknown>, data: TestSc
       author: "Admin"
     };
 
-    // Determine URL and Method
     const isUpdate = !!validatedData.id;
     const url = isUpdate
-      ? `${getBaseUrl()}/api/admin/tests/${validatedData.id}/edit`
-      : `${getBaseUrl()}/api/admin/tests/create`;
+      ? `/api/admin/tests/${validatedData.id}/edit`
+      : `/api/admin/tests/create`;
     const method = isUpdate ? "PUT" : "POST";
 
-    const res = await fetch(url, {
+    const json = await fetchBackend(url, {
       method: method,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
       body: JSON.stringify(payload),
     });
 
-    const json = await res.json();
-
-    if (!res.ok || !json.success) {
-      throw new Error(json.error || `Failed to ${isUpdate ? 'update' : 'save'} test`);
+    if (!json.success) {
+      throw new Error(json.error || json.message || `Failed to ${isUpdate ? 'update' : 'save'} test`);
     }
 
     revalidatePath("/admin/tests");

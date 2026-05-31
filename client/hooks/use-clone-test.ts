@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { cloneTestAction } from "@/app/actions/clone-test";
+import { cloneTestAction } from "@/actions/clone-test";
 
 interface CloneOptions {
   confirmMessage?: string;

@@ -13,7 +13,7 @@ import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
-import { authenticate } from "@/app/actions/auth";
+import { authenticate } from "@/actions/auth";
 
 function LoginForm() {
   const [email, setEmail] = useState("");

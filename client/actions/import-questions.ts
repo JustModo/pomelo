@@ -1,14 +1,10 @@
 "use server";
 
-import { auth } from "@/auth";
+import { fetchBackend } from "@/lib/fetch";
 import { revalidatePath } from "next/cache";
-import { getBaseUrl } from "@/lib/env";
 
 export async function importQuestions(type: "mcq" | "coding", formData: FormData) {
     try {
-        const session = await auth();
-        const token = session?.backendToken;
-
         const file = formData.get("file") as File;
         if (!file) {
             return { success: false, message: "No file provided" };
@@ -17,23 +13,16 @@ export async function importQuestions(type: "mcq" | "coding", formData: FormData
         const uploadFormData = new FormData();
         uploadFormData.append("file", file);
 
-        const res = await fetch(
-            `${getBaseUrl()}/api/admin/questions/import/${type}`,
-            {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-                body: uploadFormData,
-            }
-        );
+        const json = await fetchBackend(`/api/admin/questions/import/${type}`, {
+            method: "POST",
+            body: uploadFormData,
+            // DO NOT set Content-Type header for FormData, the browser/fetch automatically boundary sets it
+        });
 
-        const json = await res.json();
-
-        if (!res.ok || !json.success) {
+        if (!json.success) {
             return {
                 success: false,
-                message: json.error || "Failed to import questions",
+                message: json.error || json.message || "Failed to import questions",
                 errors: json.errors,
             };
         }

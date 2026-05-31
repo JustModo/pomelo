@@ -47,7 +47,7 @@ export function UserButton() {
                     </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => signOut()}>
+                <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/auth/login" })}>
                     Log out
                 </DropdownMenuItem>
             </DropdownMenuContent>

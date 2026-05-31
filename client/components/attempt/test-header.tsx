@@ -7,6 +7,7 @@ import { useRouter, usePathname, useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useTestCompletion } from "./use-test-completion";
 import { getBaseUrl } from "@/lib/env";
+import { getContestData } from "@/actions/contest";
 
 type ProblemMeta = {
   id: string;
@@ -40,18 +41,11 @@ export default function TestHeader({ problems }: TestHeaderProps) {
   // Client-side verification on mount to handle back navigation / stale cache
   React.useEffect(() => {
     const verifyStatus = async () => {
-      if (!session?.backendToken || !params.testid) return;
+      if (!params.testid) return;
       try {
-        const res = await fetch(`${getBaseUrl()}/api/test/${params.testid}/data`, {
-          headers: {
-            "Authorization": `Bearer ${session.backendToken}`,
-            "Content-Type": "application/json"
-          },
-          cache: "no-store"
-        });
-        const data = await res.json();
+        const data = await getContestData(params.testid as string);
         // If server says completed or prohibited, kick them out
-        if (!res.ok || (data.isCompleted)) {
+        if (!data.success || (data.data?.isCompleted)) {
           router.replace(`/test/${params.testid}`);
         }
       } catch {
@@ -59,7 +53,7 @@ export default function TestHeader({ problems }: TestHeaderProps) {
       }
     };
     verifyStatus();
-  }, [session, params.testid, router]);
+  }, [params.testid, router]);
 
   const handleFinish = async () => {
     if (!session?.backendToken || !params.testid) return;

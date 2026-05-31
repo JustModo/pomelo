@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { cloneTestAction } from "@/app/actions/clone-test";
+import { cloneTestAction } from "@/actions/clone-test";
 import {
   Card,
   CardContent,
@@ -47,7 +47,7 @@ export function QuickActionsCard({ test }: QuickActionsCardProps) {
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <Button 
+          <Button
             onClick={handleClone}
             disabled={isCloning}
             variant="outline"

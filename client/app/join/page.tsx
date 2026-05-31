@@ -9,7 +9,9 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { toast } from "sonner";
-import { getBaseUrl } from "@/lib/env";
+
+
+import { joinTest } from "@/actions/contest";
 
 export default function JoinContestPage() {
   const router = useRouter();
@@ -26,19 +28,7 @@ export default function JoinContestPage() {
 
     setIsLoading(true);
     try {
-      const response = await fetch(
-        `${getBaseUrl()}/api/test/join`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ joinId: otp }),
-        }
-      );
-
-      const result = await response.json();
+      const result = await joinTest(otp);
 
       if (result.success) {
         toast.success(`Joining: ${result.title}`);

@@ -18,6 +18,8 @@ import { Test } from "@/types/test";
 import { format } from "date-fns";
 import { getTestStatusBadgeVariant, getTestStatusLabel } from "@/lib/test-status";
 
+import { deleteTestAction } from "@/actions/delete-test";
+
 export function TestCard({ test }: { test: Test }) {
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
@@ -135,8 +137,8 @@ export function TestCard({ test }: { test: Test }) {
                 </Button>
               </Link>
             ) : (
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="w-full text-sm opacity-50 cursor-not-allowed border-border"
                 title="Leaderboard is available after the test ends"
               >
@@ -173,13 +175,10 @@ export function TestCard({ test }: { test: Test }) {
                 setIsDeleting(true);
 
                 try {
-                  const response = await fetch(`/api/admin/tests/${test.id}`, {
-                    method: "DELETE",
-                  });
-                  const json = await response.json();
+                  const json = await deleteTestAction(test.id as string);
 
-                  if (!response.ok || !json.success) {
-                    throw new Error(json.error || "Failed to delete test");
+                  if (!json.success) {
+                    throw new Error(json.message || "Failed to delete test");
                   }
 
                   router.refresh();

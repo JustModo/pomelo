@@ -8,6 +8,7 @@ import { Clock, AlertCircle, Calendar, Hourglass } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { getBaseUrl } from "@/lib/env";
+import { getContestLanding, startTest, getContestData } from "@/actions/contest";
 
 interface ContestDetails {
   title: string;
@@ -52,17 +53,10 @@ export default function ContestLanding() {
   }, []);
 
   const fetchInstructions = useCallback(async () => {
-    if (status !== "authenticated" || !session?.backendToken || !testid) return;
+    if (status !== "authenticated" || !testid) return;
 
     try {
-      const res = await fetch(`${getBaseUrl()}/api/test/${testid}`, {
-        headers: {
-          "Authorization": `Bearer ${session.backendToken}`,
-          "Content-Type": "application/json"
-        },
-      });
-
-      const result = await res.json();
+      const result = await getContestLanding(testid as string);
 
       if (result.success && result.data) {
         const now = new Date().getTime();
@@ -77,7 +71,7 @@ export default function ContestLanding() {
     } finally {
       setLoading(false);
     }
-  }, [testid, session, status]);
+  }, [testid, status]);
 
   useEffect(() => {
     if (testid && status === "authenticated") fetchInstructions();
@@ -107,24 +101,13 @@ export default function ContestLanding() {
         }
       }
 
-      const res = await fetch(`${getBaseUrl()}/api/test/start`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${session?.backendToken}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ contestId: testid })
-      });
+      const result = await startTest(testid as string);
 
-      const result = await res.json();
       if (result.success) {
         toast.success("Good luck!");
 
         // Fetch problems to redirect to the first one
-        const questionsRes = await fetch(`${getBaseUrl()}/api/test/${testid}/data`, {
-          headers: { "Authorization": `Bearer ${session?.backendToken}` }
-        });
-        const questionsData = await questionsRes.json();
+        const questionsData = await getContestData(testid as string);
         if (questionsData.success && questionsData.data.problems?.length > 0) {
           router.push(`/attempt/test/${testid}/question/${questionsData.data.problems[0].id}`);
         } else {

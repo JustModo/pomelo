@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Save } from "lucide-react";
 import { useActionState, useTransition, useEffect } from "react";
 import TestQuestions from "../questions-list";
-import { saveTest } from "@/app/actions/save-test";
+import { saveTest } from "@/actions/save-test";
 import { toast } from "sonner";
 import { formatTimeForDisplay } from "@/lib/date-utils";
 

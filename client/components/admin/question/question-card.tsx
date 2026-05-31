@@ -7,7 +7,7 @@ import { BaseProblem } from "@/types/problem/problem.types";
 import React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { deleteQuestion } from "@/app/actions/delete-question";
+import { deleteQuestion } from "@/actions/delete-question";
 
 interface Props {
   problem: BaseProblem;
